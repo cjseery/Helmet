@@ -1,0 +1,202 @@
+---
+title: "CS2 data wrangling"
+author: "Ian Stonecypher"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#install.packages("readxl")
+library(patchwork)
+library("readxl")
+library(ggplot2)
+library(tidyverse)
+```
+
+```{r}
+foamDataRaw <- read_excel("DMA_Fatigue_Data_from_Team_Wendy_Polyurethane_LLNL-MI-860456.xlsx")
+names(foamDataRaw) <- foamDataRaw[3,]
+foamDataRaw <- foamDataRaw[-c(1:3),] # remove rows without data
+foamDataRaw <- foamDataRaw[,-c(62:64)] # remove duplicate columns
+```
+
+```{r}
+foamDataIntermediate <- foamDataRaw |>
+  separate(col=SampleCode, into=c("Chemical", "chemIndex", "porosity", "ID")) |>
+  select(!Chemical) |>
+  mutate_at(vars(chemIndex), as.character) |>
+  mutate_at(vars(porosity), as.character) |>
+  mutate(chemIndex = dplyr::recode(chemIndex, "79"="1", "100"="2", "121"="3")) |>
+  mutate(porosity = dplyr::recode(porosity, "71"="low", "81"="high")) |>
+  rename("initialStrain"="strain") |>
+  rename("initialStress"="stresskpa") |>
+  mutate_at(c("Cyc_A", "Cyc_B", "Cyc_C", "Cyc_D", "Cyc_E", "Cyc_F", "Cyc_G", "Cyc_H", "Cyc_I", "Cyc_J", "Cyc_K", "Cyc_L", "Cyc_M", "Cyc_N", "E1_MPA_Cyc_A", "E1_MPA_Cyc_B", "E1_MPA_Cyc_C", "E1_MPA_Cyc_D", "E1_MPA_Cyc_E", "E1_MPA_Cyc_F", "E1_MPA_Cyc_G", "E1_MPA_Cyc_H", "E1_MPA_Cyc_I", "E1_MPA_Cyc_J", "E1_MPA_Cyc_K", "E1_MPA_Cyc_L", "E1_MPA_Cyc_M", "E1_MPA_Cyc_N", "delta_rad_Cyc_A", "delta_rad_Cyc_B", "delta_rad_Cyc_C", "delta_rad_Cyc_D", "delta_rad_Cyc_E", "delta_rad_Cyc_F", "delta_rad_Cyc_G", "delta_rad_Cyc_H", "delta_rad_Cyc_I", "delta_rad_Cyc_J", "delta_rad_Cyc_K", "delta_rad_Cyc_L", "delta_rad_Cyc_M", "delta_rad_Cyc_N"), as.numeric)
+
+#These lines add columns for Rate Of Change of stiffness and damping.
+foamDataIntermediate <- foamDataIntermediate |>
+  mutate(stiffness_ROC_A = NA) |>
+  mutate(stiffness_ROC_B = (E1_MPA_Cyc_B - E1_MPA_Cyc_A)/(Cyc_B - Cyc_A))|>
+  mutate(stiffness_ROC_C = (E1_MPA_Cyc_C - E1_MPA_Cyc_B)/(Cyc_C - Cyc_B))|>
+  mutate(stiffness_ROC_D = (E1_MPA_Cyc_D - E1_MPA_Cyc_C)/(Cyc_D - Cyc_C))|>
+  mutate(stiffness_ROC_E = (E1_MPA_Cyc_E - E1_MPA_Cyc_D)/(Cyc_E - Cyc_D))|>
+  mutate(stiffness_ROC_F = (E1_MPA_Cyc_F - E1_MPA_Cyc_E)/(Cyc_F - Cyc_E))|>
+  mutate(stiffness_ROC_G = (E1_MPA_Cyc_G - E1_MPA_Cyc_F)/(Cyc_G - Cyc_F))|>
+  mutate(stiffness_ROC_H = (E1_MPA_Cyc_H - E1_MPA_Cyc_G)/(Cyc_H - Cyc_G))|>
+  mutate(stiffness_ROC_I = (E1_MPA_Cyc_I - E1_MPA_Cyc_H)/(Cyc_I - Cyc_H))|>
+  mutate(stiffness_ROC_J = (E1_MPA_Cyc_J - E1_MPA_Cyc_I)/(Cyc_J - Cyc_I))|>
+  mutate(stiffness_ROC_K = (E1_MPA_Cyc_K - E1_MPA_Cyc_J)/(Cyc_K - Cyc_J))|>
+  mutate(stiffness_ROC_L = (E1_MPA_Cyc_L - E1_MPA_Cyc_K)/(Cyc_L - Cyc_K))|>
+  mutate(stiffness_ROC_M = (E1_MPA_Cyc_M - E1_MPA_Cyc_L)/(Cyc_M - Cyc_L))|>
+  mutate(stiffness_ROC_N = (E1_MPA_Cyc_N - E1_MPA_Cyc_M)/(Cyc_N - Cyc_M))|>
+  mutate(damping_ROC_A = NA) |>
+  mutate(damping_ROC_B = (delta_rad_Cyc_B - delta_rad_Cyc_A)/(Cyc_B - Cyc_A))|>
+  mutate(damping_ROC_C = (delta_rad_Cyc_C - delta_rad_Cyc_B)/(Cyc_C - Cyc_B))|>
+  mutate(damping_ROC_D = (delta_rad_Cyc_D - delta_rad_Cyc_C)/(Cyc_D - Cyc_C))|>
+  mutate(damping_ROC_E = (delta_rad_Cyc_E - delta_rad_Cyc_D)/(Cyc_E - Cyc_D))|>
+  mutate(damping_ROC_F = (delta_rad_Cyc_F - delta_rad_Cyc_E)/(Cyc_F - Cyc_E))|>
+  mutate(damping_ROC_G = (delta_rad_Cyc_G - delta_rad_Cyc_F)/(Cyc_G - Cyc_F))|>
+  mutate(damping_ROC_H = (delta_rad_Cyc_H - delta_rad_Cyc_G)/(Cyc_H - Cyc_G))|>
+  mutate(damping_ROC_I = (delta_rad_Cyc_I - delta_rad_Cyc_H)/(Cyc_I - Cyc_H))|>
+  mutate(damping_ROC_J = (delta_rad_Cyc_J - delta_rad_Cyc_I)/(Cyc_J - Cyc_I))|>
+  mutate(damping_ROC_K = (delta_rad_Cyc_K - delta_rad_Cyc_J)/(Cyc_K - Cyc_J))|>
+  mutate(damping_ROC_L = (delta_rad_Cyc_L - delta_rad_Cyc_K)/(Cyc_L - Cyc_K))|>
+  mutate(damping_ROC_M = (delta_rad_Cyc_M - delta_rad_Cyc_L)/(Cyc_M - Cyc_L))|>
+  mutate(damping_ROC_N = (delta_rad_Cyc_N - delta_rad_Cyc_M)/(Cyc_N - Cyc_M))
+  
+```
+
+```{r}
+# These lines lengthen the data by putting each measurement interval in its own data frame, and row-binding them together.
+
+foamDataA <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_A, E1_MPA_Cyc_A, stiffness_ROC_A, delta_rad_Cyc_A, damping_ROC_A, NVP_Cyc_A) |>
+  rename("cycle"="Cyc_A") |>
+  rename("stiffness"="E1_MPA_Cyc_A") |>
+  rename("damping"="delta_rad_Cyc_A") |>
+  rename("NVP"="NVP_Cyc_A") |>
+  mutate("intervalCode"="A") |>
+  rename("stiffnessROC"="stiffness_ROC_A") |>
+  rename("dampingROC"="damping_ROC_A")
+foamDataB <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_B, E1_MPA_Cyc_B, stiffness_ROC_B, delta_rad_Cyc_B, damping_ROC_B, NVP_Cyc_B) |>
+  rename("cycle"="Cyc_B") |>
+  rename("stiffness"="E1_MPA_Cyc_B") |>
+  rename("damping"="delta_rad_Cyc_B") |>
+  rename("NVP"="NVP_Cyc_B") |>
+  mutate("intervalCode"="B") |>
+  rename("stiffnessROC"="stiffness_ROC_B") |>
+  rename("dampingROC"="damping_ROC_B")
+foamDataC <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_C, E1_MPA_Cyc_C, stiffness_ROC_C, delta_rad_Cyc_C, damping_ROC_C, NVP_Cyc_C) |>
+  rename("cycle"="Cyc_C") |>
+  rename("stiffness"="E1_MPA_Cyc_C") |>
+  rename("damping"="delta_rad_Cyc_C") |>
+  rename("NVP"="NVP_Cyc_C") |>
+  mutate("intervalCode"="C") |>
+  rename("stiffnessROC"="stiffness_ROC_C") |>
+  rename("dampingROC"="damping_ROC_C")
+foamDataD <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_D, E1_MPA_Cyc_D, stiffness_ROC_D, delta_rad_Cyc_D, damping_ROC_D, NVP_Cyc_D) |>
+  rename("cycle"="Cyc_D") |>
+  rename("stiffness"="E1_MPA_Cyc_D") |>
+  rename("damping"="delta_rad_Cyc_D") |>
+  rename("NVP"="NVP_Cyc_D") |>
+  mutate("intervalCode"="D") |>
+  rename("stiffnessROC"="stiffness_ROC_D") |>
+  rename("dampingROC"="damping_ROC_D")
+foamDataE <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_E, E1_MPA_Cyc_E, stiffness_ROC_E, delta_rad_Cyc_E, damping_ROC_E, NVP_Cyc_E) |>
+  rename("cycle"="Cyc_E") |>
+  rename("stiffness"="E1_MPA_Cyc_E") |>
+  rename("damping"="delta_rad_Cyc_E") |>
+  rename("NVP"="NVP_Cyc_E") |>
+  mutate("intervalCode"="E") |>
+  rename("stiffnessROC"="stiffness_ROC_E") |>
+  rename("dampingROC"="damping_ROC_E")
+foamDataF <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_F, E1_MPA_Cyc_F, stiffness_ROC_F, delta_rad_Cyc_F, damping_ROC_F, NVP_Cyc_F) |>
+  rename("cycle"="Cyc_F") |>
+  rename("stiffness"="E1_MPA_Cyc_F") |>
+  rename("damping"="delta_rad_Cyc_F") |>
+  rename("NVP"="NVP_Cyc_F") |>
+  mutate("intervalCode"="F") |>
+  rename("stiffnessROC"="stiffness_ROC_F") |>
+  rename("dampingROC"="damping_ROC_F")
+foamDataG <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_G, E1_MPA_Cyc_G, stiffness_ROC_G, delta_rad_Cyc_G, damping_ROC_G, NVP_Cyc_G) |>
+  rename("cycle"="Cyc_G") |>
+  rename("stiffness"="E1_MPA_Cyc_G") |>
+  rename("damping"="delta_rad_Cyc_G") |>
+  rename("NVP"="NVP_Cyc_G") |>
+  mutate("intervalCode"="G") |>
+  rename("stiffnessROC"="stiffness_ROC_G") |>
+  rename("dampingROC"="damping_ROC_G")
+foamDataH <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_H, E1_MPA_Cyc_H, stiffness_ROC_H, delta_rad_Cyc_H, damping_ROC_H, NVP_Cyc_H) |>
+  rename("cycle"="Cyc_H") |>
+  rename("stiffness"="E1_MPA_Cyc_H") |>
+  rename("damping"="delta_rad_Cyc_H") |>
+  rename("NVP"="NVP_Cyc_H") |>
+  mutate("intervalCode"="H") |>
+  rename("stiffnessROC"="stiffness_ROC_H") |>
+  rename("dampingROC"="damping_ROC_H")
+foamDataI <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_I, E1_MPA_Cyc_I, stiffness_ROC_I, delta_rad_Cyc_I, damping_ROC_I, NVP_Cyc_I) |>
+  rename("cycle"="Cyc_I") |>
+  rename("stiffness"="E1_MPA_Cyc_I") |>
+  rename("damping"="delta_rad_Cyc_I") |>
+  rename("NVP"="NVP_Cyc_I") |>
+  mutate("intervalCode"="I") |>
+  rename("stiffnessROC"="stiffness_ROC_I") |>
+  rename("dampingROC"="damping_ROC_I")
+foamDataJ <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_J, E1_MPA_Cyc_J, stiffness_ROC_J, delta_rad_Cyc_J, damping_ROC_J, NVP_Cyc_J) |>
+  rename("cycle"="Cyc_J") |>
+  rename("stiffness"="E1_MPA_Cyc_J") |>
+  rename("damping"="delta_rad_Cyc_J") |>
+  rename("NVP"="NVP_Cyc_J") |>
+  mutate("intervalCode"="J") |>
+  rename("stiffnessROC"="stiffness_ROC_J") |>
+  rename("dampingROC"="damping_ROC_J")
+foamDataK <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_K, E1_MPA_Cyc_K, stiffness_ROC_K, delta_rad_Cyc_K, damping_ROC_K, NVP_Cyc_K) |>
+  rename("cycle"="Cyc_K") |>
+  rename("stiffness"="E1_MPA_Cyc_K") |>
+  rename("damping"="delta_rad_Cyc_K") |>
+  rename("NVP"="NVP_Cyc_K") |>
+  mutate("intervalCode"="K") |>
+  rename("stiffnessROC"="stiffness_ROC_K") |>
+  rename("dampingROC"="damping_ROC_K")
+foamDataL <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_L, E1_MPA_Cyc_L, stiffness_ROC_L, delta_rad_Cyc_L, damping_ROC_L, NVP_Cyc_L) |>
+  rename("cycle"="Cyc_L") |>
+  rename("stiffness"="E1_MPA_Cyc_L") |>
+  rename("damping"="delta_rad_Cyc_L") |>
+  rename("NVP"="NVP_Cyc_L") |>
+  mutate("intervalCode"="L") |>
+  rename("stiffnessROC"="stiffness_ROC_L") |>
+  rename("dampingROC"="damping_ROC_L")
+foamDataM <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_M, E1_MPA_Cyc_M, stiffness_ROC_M, delta_rad_Cyc_M, damping_ROC_M, NVP_Cyc_M) |>
+  rename("cycle"="Cyc_M") |>
+  rename("stiffness"="E1_MPA_Cyc_M") |>
+  rename("damping"="delta_rad_Cyc_M") |>
+  rename("NVP"="NVP_Cyc_M") |>
+  mutate("intervalCode"="M") |>
+  rename("stiffnessROC"="stiffness_ROC_M") |>
+  rename("dampingROC"="damping_ROC_M")
+foamDataN <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_N, E1_MPA_Cyc_N, stiffness_ROC_N, delta_rad_Cyc_N, damping_ROC_N, NVP_Cyc_N) |>
+  rename("cycle"="Cyc_N") |>
+  rename("stiffness"="E1_MPA_Cyc_N") |>
+  rename("damping"="delta_rad_Cyc_N") |>
+  rename("NVP"="NVP_Cyc_N") |>
+  mutate("intervalCode"="N") |>
+  rename("stiffnessROC"="stiffness_ROC_N") |>
+  rename("dampingROC"="damping_ROC_N")
+
+foamData <- rbind(foamDataA, foamDataB, foamDataC, foamDataD, foamDataE, foamDataF, foamDataG, foamDataH, foamDataI, foamDataJ, foamDataK, foamDataL, foamDataM, foamDataN)
+```
+
+```{r}
+# Filter rows with NA in the cycle, stiffness, and damping columns
+foamData <- filter(foamData, !is.na(cycle))
+
+# Reorder the columns
+foamData <- select(foamData, 3, 1, 2, 4, 5, 6, 7, 14, 8, 9, 10, 11, 12, 13)
+```
+
+```{r}
+write_csv(foamData, "foamData.csv")
+```
