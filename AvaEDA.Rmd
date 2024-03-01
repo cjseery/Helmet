@@ -1,0 +1,70 @@
+---
+title: "Ava's EDA"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(ggplot2)
+library(patchwork)
+library(tidyverse)
+```
+
+```{r}
+setwd("C:/Users/Ava/OneDrive - Colorado School of Mines/Desktop/Mines/Year4/Semester2/Stat Practicum")
+foam_data <- read.csv("foamData.csv")
+```
+
+```{r}
+ggplot(foam_data, aes(x = cycle, y = stiffness)) +
+  geom_point(aes(color = porosity)) +
+  xlim(0,10000)
+
+ggplot(foam_data, aes(x = cycle, y = stiffness)) +
+  geom_point(aes(color = initialStrain)) +
+  xlim(0,10000)
+
+ggplot(foam_data, aes(x = cycle, y = stiffness)) +
+  geom_point(aes(color = initialStress)) +
+  xlim(0,10000)
+
+ggplot(foam_data, aes(x = cycle, y = stiffness)) +
+  geom_point(aes(color = chemIndex)) +
+  xlim(0,10000)
+
+ggplot(foam_data, aes(x = cycle, y = stiffness)) +
+  geom_point(aes(color = freq)) +
+  xlim(0,10000)
+
+ggplot(foam_data, aes(x = cycle, y = stiffness)) +
+  geom_point(aes(color = amp)) +
+  xlim(0,10000)
+```
+```{r}
+ggplot(foam_data, aes(x = cycle, y = stiffness)) +
+  geom_point() +
+  xlim(0,10000)
+```
+
+```{r}
+ggplot(foam_data, aes(x = porosity, y = stiffness)) +
+  geom_boxplot() 
+
+ggplot(foam_data, aes(x = factor(chemIndex), y = stiffness)) +
+  geom_boxplot() 
+
+ggplot(data= foam_data, aes(x = porosity, y = stiffness, fill = factor(chemIndex))) +
+  geom_boxplot() 
+```
+
+```{r}
+ggplot(foam_data, aes(x = cycle, y = damping)) +
+  geom_point(aes(color = porosity))
+
+ggplot(foam_data, aes(x = cycle, y = stiffness)) +
+  geom_point(aes(color = initialStrain))
+```
+
