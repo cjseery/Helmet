@@ -1,0 +1,62 @@
+---
+title: "EDA-Helmet"
+author: "Katie Greene"
+date: "2024-02-29"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+
+```{r}
+foam_data <- read.csv(file.choose())
+
+```
+
+```{r}
+
+   
+ggplot(data = foam_data, aes(y = damping)) + geom_point(aes(x=freq), colour = 'red') 
+ggplot(data = foam_data, aes(y = damping)) + geom_point(aes(x=amp), colour = 'orange')
+ggplot(data = foam_data, aes(y = damping)) + geom_point(aes(x=initialStrain), colour = 'green')
+ggplot(data = foam_data, aes(y = damping)) + geom_point(aes(x=initialStress), colour = 'blue')
+ggplot(data = foam_data, aes(x=cycle, y = damping , fill = factor(ID))) + geom_point()
+```
+
+
+```{r}
+ggplot(data = foam_data, aes(x = porosity, y = damping, fill = factor(chemIndex))) + geom_boxplot()
+
+```
+
+
+```{r}
+
+ggplot(foam_data, aes(x = factor(chemIndex), y = damping)) + geom_boxplot()
+ggplot(foam_data, aes(x = factor(porosity), y = damping)) + geom_boxplot()
+```
+
+```{r}
+ggplot(foam_data, aes(x = factor(cycle), y = damping, fill = factor(cycle))) + geom_boxplot()
+```
+
+```{r}
+hist(foam_data$damping)
+```
+
+```{r}
+ggplot(foam_data, aes(x = factor(ID), y = damping)) + geom_point()
+tally(foam_data$damping ~ foam_data$ID)
+```
+
+
+
+
+
+
+
+
+
