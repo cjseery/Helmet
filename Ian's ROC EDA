@@ -1,0 +1,282 @@
+---
+title: "CS2 EDA - Ian's Part"
+format: pdf
+---
+
+
+This file is just meant as a template to help you load all the typical packages we use for EDA and modeling fitting, and then give you a place to explore the data (outside of your formal report).
+
+```{r}
+#| label: load-packages
+#| echo: false
+#|
+# clean up environment, load packages, load data
+rm(list = ls())
+
+# packages
+library(tidyverse) 
+library(mosaic)    
+library(ggformula)
+
+# read in file
+foam_data <- read.csv("foamData.csv")
+foam_data <- mutate(foam_data, chemIndex = as.character(chemIndex)) #Why isn't this working?
+foam_data <- mutate(foam_data, ID = as.character(ID)) #Why isn't this working?
+
+```
+
+```{r}
+ggplot(foam_data, aes(x=stiffnessROC)) + 
+  geom_histogram()
+ggplot(foam_data, aes(x=dampingROC)) + 
+  geom_histogram()
+
+ggplot(foam_data, aes(x=cycle, y=stiffnessROC)) + 
+  geom_point()
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025,], aes(x=cycle, y=stiffnessROC)) + 
+  geom_point()
+
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025 & foam_data$cycle <= 1000,], aes(x=stiffnessROC)) + 
+  geom_histogram() +
+  xlim(-2e-4, 2e-4)
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025 & foam_data$cycle == 2000,], aes(x=stiffnessROC)) + 
+  geom_histogram() +
+  xlim(-5e-5, 5e-5)
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025 & foam_data$cycle == 3000,], aes(x=stiffnessROC)) + 
+  geom_histogram() +
+  xlim(-5e-5, 5e-5)
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025 & foam_data$cycle == 4000,], aes(x=stiffnessROC)) + 
+  geom_histogram() +
+  xlim(-5e-5, 5e-5)
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025 & foam_data$cycle == 5000,], aes(x=stiffnessROC)) + 
+  geom_histogram() +
+  xlim(-5e-5, 5e-5)
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025 & foam_data$cycle == 6000,], aes(x=stiffnessROC)) + 
+  geom_histogram() +
+  xlim(-5e-5, 5e-5)
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025 & foam_data$cycle == 7000,], aes(x=stiffnessROC)) + 
+  geom_histogram() +
+  xlim(-5e-5, 5e-5)
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025 & foam_data$cycle == 8000,], aes(x=stiffnessROC)) + 
+  geom_histogram() +
+  xlim(-5e-5, 5e-5)
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025 & foam_data$cycle == 9000,], aes(x=stiffnessROC)) + 
+  geom_histogram() +
+  xlim(-5e-5, 5e-5)
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025 & foam_data$cycle == 10000,], aes(x=stiffnessROC)) + 
+  geom_histogram() +
+  xlim(-5e-5, 5e-5)
+
+
+ggplot(foam_data, aes(x=cycle, y=dampingROC)) + 
+  geom_point()
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025,], aes(x=cycle, y=dampingROC)) + 
+  geom_point()
+
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025 & foam_data$cycle <= 1000,], aes(x=dampingROC)) + 
+  geom_histogram() +
+  xlim(-5e-5, 5e-5)
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025 & foam_data$cycle == 2000,], aes(x=dampingROC)) + 
+  geom_histogram() +
+  xlim(-2e-5, 2e-5)
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025 & foam_data$cycle == 3000,], aes(x=dampingROC)) + 
+  geom_histogram() +
+  xlim(-2e-5, 2e-5)
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025 & foam_data$cycle == 4000,], aes(x=dampingROC)) + 
+  geom_histogram() +
+  xlim(-2e-5, 2e-5)
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025 & foam_data$cycle == 5000,], aes(x=dampingROC)) + 
+  geom_histogram() +
+  xlim(-2e-5, 2e-5)
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025 & foam_data$cycle == 6000,], aes(x=dampingROC)) + 
+  geom_histogram() +
+  xlim(-2e-5, 2e-5)
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025 & foam_data$cycle == 7000,], aes(x=dampingROC)) + 
+  geom_histogram() +
+  xlim(-2e-5, 2e-5)
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025 & foam_data$cycle == 8000,], aes(x=dampingROC)) + 
+  geom_histogram() +
+  xlim(-2e-5, 2e-5)
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025 & foam_data$cycle == 9000,], aes(x=dampingROC)) + 
+  geom_histogram() +
+  xlim(-2e-5, 2e-5)
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025 & foam_data$cycle == 10000,], aes(x=dampingROC)) + 
+  geom_histogram() +
+  xlim(-2e-5, 2e-5)
+
+# Histograms do not show any siffness/damping ROC trend in time, aside from the lowest outliers happening early.
+```
+
+```{r}
+ggplot(foam_data, aes(x=cycle, y=stiffnessROC)) + 
+  geom_point()
+ggplot(foam_data[foam_data$stiffnessROC > -0.001,], aes(x=cycle, y=stiffnessROC)) + 
+  geom_point()
+ggplot(foam_data[foam_data$stiffnessROC > -2e-04 & foam_data$stiffnessROC < 2e-04,], aes(x=cycle, y=stiffnessROC)) + 
+  geom_point()
+ggplot(foam_data[foam_data$stiffnessROC > -1e-04 & foam_data$stiffnessROC < 1e-04,], aes(x=cycle, y=stiffnessROC)) + 
+  geom_point()
+ggplot(foam_data[foam_data$stiffnessROC > -5e-05 & foam_data$stiffnessROC < 5e-05,], aes(x=cycle, y=stiffnessROC)) + 
+  geom_point()
+ggplot(foam_data[foam_data$stiffnessROC > -2.5e-05 & foam_data$stiffnessROC < 2.5e-05,], aes(x=cycle, y=stiffnessROC)) + 
+  geom_point()
+ggplot(foam_data[foam_data$stiffnessROC > -1e-05 & foam_data$stiffnessROC < 1e-05,], aes(x=cycle, y=stiffnessROC)) +
+  geom_point()
+```
+
+```{r}
+foamIDs <- unique(foam_data$ID)
+
+for(i in 1:length(foamIDs)) {
+print(ggplot(foam_data[foam_data$ID == foamIDs[i],], aes(x=cycle, y=stiffnessROC, color=ID)) + 
+  geom_point() )
+}
+```
+
+```{r}
+IDsWithTrends <- c(137, 140, 146, 167, 138, 125, 105, 127, 150, 151, 152, 129, 143, 145, 168, 108, 112, 148, 166)
+samplesWithTrends <- filter(foam_data, ID %in% IDsWithTrends)
+```
+
+```{r}
+foamIDs <- unique(foam_data$ID)
+
+for(i in 1:length(foamIDs)) {
+print(ggplot(foam_data[foam_data$ID == foamIDs[i],], aes(x=cycle, y=dampingROC, color=ID)) + 
+  geom_point() )
+}
+```
+
+```{r}
+ggplot(foam_data, aes(x=porosity, y=stiffnessROC, fill=chemIndex)) + 
+  geom_boxplot()
+ggplot(foam_data[foam_data$stiffnessROC > -0.001 & foam_data$stiffnessROC < 0.001 & !is.na(foam_data$stiffnessROC),], aes(x=porosity, y=stiffnessROC, fill=chemIndex)) + 
+  geom_boxplot()
+ggplot(foam_data[foam_data$stiffnessROC > -2e-04 & foam_data$stiffnessROC < 2e-04 & !is.na(foam_data$stiffnessROC),], aes(x=porosity, y=stiffnessROC, fill=chemIndex)) + 
+  geom_boxplot()
+ggplot(foam_data[foam_data$stiffnessROC > -0.5e-04 & foam_data$stiffnessROC < 0.5e-04 & !is.na(foam_data$stiffnessROC),], aes(x=porosity, y=stiffnessROC, fill=chemIndex)) + 
+  geom_boxplot()
+ggplot(foam_data[foam_data$stiffnessROC > -1e-05 & foam_data$stiffnessROC < 1e-05 & !is.na(foam_data$stiffnessROC),], aes(x=porosity, y=stiffnessROC, fill=chemIndex)) + 
+  geom_boxplot() +
+  geom_hline(yintercept=0, linetype=2)
+
+#Low porosity varies more than high, and index 3 varies most
+#Index 3 appears to decrease in stiffness more than the others
+```
+
+```{r}
+ggplot(foam_data, aes(x=porosity, y=dampingROC, fill=chemIndex)) + 
+  geom_boxplot()
+ggplot(foam_data[foam_data$dampingROC > -0.001 & foam_data$dampingROC < 0.001 & !is.na(foam_data$dampingROC),], aes(x=porosity, y=dampingROC, fill=chemIndex)) + 
+  geom_boxplot()
+ggplot(foam_data[foam_data$dampingROC > -0.5e-04 & foam_data$dampingROC < 0.5e-04 & !is.na(foam_data$dampingROC),], aes(x=porosity, y=dampingROC, fill=chemIndex)) +
+  geom_boxplot()
+ggplot(foam_data[foam_data$dampingROC > -1e-05 & foam_data$dampingROC < 1e-05 & !is.na(foam_data$dampingROC),], aes(x=porosity, y=dampingROC, fill=chemIndex)) + 
+  geom_boxplot()
+ggplot(foam_data[foam_data$dampingROC > -5e-06 & foam_data$dampingROC < 5e-06 & !is.na(foam_data$dampingROC),], aes(x=porosity, y=dampingROC, fill=chemIndex)) + 
+  geom_boxplot()+
+  geom_hline(yintercept=0, linetype=2)
+
+#High porosity may vary more than low, especially in the case of index 2
+#Damping mainly appears to decrease.
+#Low porosity decreases more, but maybe not for index 1
+```
+
+```{r}
+ggplot(foam_data, aes(x=freq, y=stiffnessROC)) +
+  geom_point()
+ggplot(foam_data, aes(x=freq, y=dampingROC)) +
+  geom_point()
+
+ggplot(foam_data, aes(x=amp, y=stiffnessROC)) +
+  geom_point()
+ggplot(foam_data, aes(x=amp, y=dampingROC)) +
+  geom_point()
+
+ggplot(foam_data, aes(x=initialStrain, y=stiffnessROC)) +
+  geom_point()
+ggplot(foam_data, aes(x=initialStrain, y=dampingROC)) +
+  geom_point()
+
+ggplot(foam_data, aes(x=initialStress, y=stiffnessROC)) +
+  geom_point()
+ggplot(foam_data, aes(x=initialStress, y=dampingROC)) +
+  geom_point()
+
+#more negative stiffROC skew from freq 15, amp almost 0.04, from initial strain -0.3, and from low initial stress. None just have the most observations, or if they do, there are other categories of comparable size with less variation.
+#low damping ROCs came from low frequencies. Those do seem to have the most observations though, so it's hard to say.
+```
+
+```{r}
+ggplot(foam_data[foam_data$stiffnessROC > -0.001 & foam_data$stiffnessROC < 0.001,], aes(x=freq, y=stiffnessROC)) +
+  geom_point()
+ggplot(foam_data[foam_data$dampingROC > -0.001 & foam_data$dampingROC < 0.001,], aes(x=freq, y=dampingROC)) +
+  geom_point()
+
+ggplot(foam_data[foam_data$stiffnessROC > -0.001 & foam_data$stiffnessROC < 0.001,], aes(x=amp, y=stiffnessROC)) +
+  geom_point()
+ggplot(foam_data[foam_data$dampingROC > -0.001 & foam_data$dampingROC < 0.001,], aes(x=amp, y=dampingROC)) +
+  geom_point()
+
+ggplot(foam_data[foam_data$stiffnessROC > -0.001 & foam_data$stiffnessROC < 0.001,], aes(x=initialStrain, y=stiffnessROC)) +
+  geom_point()
+ggplot(foam_data[foam_data$dampingROC > -0.001 & foam_data$dampingROC < 0.001,], aes(x=initialStrain, y=dampingROC)) +
+  geom_point()
+
+ggplot(foam_data[foam_data$stiffnessROC > -0.001 & foam_data$stiffnessROC < 0.001,], aes(x=initialStress, y=stiffnessROC)) +
+  geom_point()
+ggplot(foam_data[foam_data$dampingROC > -0.001 & foam_data$dampingROC < 0.001,], aes(x=initialStress, y=dampingROC)) +
+  geom_point()
+
+```
+
+```{r}
+ggplot(foam_data, aes(x=freq)) +
+  geom_histogram()
+
+ggplot(foam_data, aes(x=amp)) +
+  geom_histogram()
+
+ggplot(foam_data, aes(x=initialStrain)) +
+  geom_histogram()
+
+ggplot(foam_data, aes(x=initialStress)) +
+  geom_histogram()
+
+# Damping varies more with more initial stress, but those are more frequent too.
+```
+
+```{r}
+ggplot(foam_data, aes(x=cycle, y=dampingROC)) + 
+  geom_point()
+
+dampingGroupA <- filter(foam_data, dampingROC < -0.005)
+dampingGroupB <- filter(foam_data, dampingROC > -0.005 & dampingROC < -0.0025)
+dampingGroupC <- filter(foam_data, dampingROC > -0.0025 & dampingROC < 0.0025)
+dampingGroupD <- filter(foam_data, dampingROC > 0.0025)
+
+# Groups A, B, and D are all from the same amplitude, but it's also the most common amplitude by a lot.
+# Also, all are from the first ROC measurement, so the most drastic change is first.
+# A is from 250 cycles, but B and D are from 2000 cycles. In fact, they're a factor of 8 apart, so the change probably happens immediately, and then the ROC is coming off different just based on how many cycles I divided that number by. So A and B are the same.
+# A and B happen at low frequencies, but that's also most common, so it's hard to say.
+```
+
+```{r}
+ggplot(foam_data, aes(x=amp)) +
+  geom_histogram(binwidth=0.001)
+ggplot(foam_data[foam_data$amp > 0.02 & foam_data$amp < 0.03,], aes(x=amp)) +
+  geom_histogram()
+```
+
+```{r}
+ggplot(foam_data, aes(x=stiffness, y=stiffnessROC)) +
+  geom_point()
+ggplot(foam_data[foam_data$stiffnessROC > -0.00025 & foam_data$stiffnessROC < 0.00025,], aes(x=stiffness, y=stiffnessROC)) + 
+  geom_point()
+ggplot(foam_data, aes(x=damping, y=dampingROC)) +
+  geom_point()
+ggplot(foam_data[foam_data$dampingROC > -0.0025 & foam_data$dampingROC < 0.0025,], aes(x=damping, y=dampingROC)) + 
+  geom_point()
+
+#Big stiffness decreases come from big stiffness (which is not the most common).
+```
