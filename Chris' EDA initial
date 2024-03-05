@@ -1,0 +1,103 @@
+---
+title: "Chris' EDA initial"
+output: pdf_document
+date: "2024-03-05"
+---
+
+```{r setup, include=FALSE}
+rm(list = ls())
+knitr::opts_chunk$set(echo = TRUE)
+library(patchwork)
+library(ggplot2)
+library(tidyverse)
+```
+
+
+```{r}
+foam_data <- read_csv("foamData.csv")
+
+foam_data <- foam_data |>
+  mutate(positive_stiffness)
+
+full_df$positive <- as.numeric(rowSums(full_df[, c("letdiff", "formdiff", "numbdiff")]) > 0)
+
+
+foam_data <- foam_data |>
+  mutate(initialStiff = initialStress/initialStrain)
+
+foam_data <- foam_data |>
+  mutate(true_stiff = initialStiff + stiffness)
+
+```
+
+
+### true stiffness comparison
+```{r}
+ggplot(foam_data, aes(x = cycle, y = stiffness, color = as.factor(chemIndex))) +
+  geom_point() +
+  labs(color = "Chemical Index")
+
+ggplot(foam_data, aes(x = cycle, y = true_stiff, color = as.factor(chemIndex))) +
+  geom_point() +
+  labs(color = "Chemical Index")
+
+```
+
+### ID's with true_stiff greater than 500
+```{r}
+
+
+foamIDs <- unique(foam_data$ID)
+
+for (i in 1:length(foamIDs)) {
+  subset_data <- foam_data[foam_data$ID == foamIDs[i], ]
+  
+  if (any(subset_data$true_stiff > 500)) {
+    print(ggplot(subset_data, aes(x = cycle, y = true_stiff, color = chemIndex)) +
+            geom_point())
+  }
+}
+
+```
+
+### ID's with truw stiff between 300-500
+```{r}
+
+for (i in 1:length(foamIDs)) {
+  subset_data <- foam_data[foam_data$ID == foamIDs[i], ]
+  
+  if (any(subset_data$true_stiff >= 300 & subset_data$true_stiff <= 500)) {
+    print(ggplot(subset_data, aes(x = cycle, y = true_stiff, color = chemIndex)) +
+            geom_point()+
+  labs(color = "Chemical Index"))
+  }
+}
+
+```
+### ID's with truw stiff between 100-300
+```{r}
+for (i in 1:length(foamIDs)) {
+  subset_data <- foam_data[foam_data$ID == foamIDs[i], ]
+  
+  if (any(subset_data$true_stiff >= 100 & subset_data$true_stiff <= 300)) {
+    print(ggplot(subset_data, aes(x = cycle, y = true_stiff, color = porosity)) +
+            geom_point()+
+  labs(color = "Porosity"))
+  }
+}
+
+```
+
+### ID's with truw stiff between 0-100
+```{r}
+for (i in 1:length(foamIDs)) {
+  subset_data <- foam_data[foam_data$ID == foamIDs[i], ]
+  
+  if (any(subset_data$true_stiff >= 0 & subset_data$true_stiff <= 100)) {
+    print(ggplot(subset_data, aes(x = cycle, y = true_stiff, color = chemIndex)) +
+            geom_point()+
+  labs(color = "Chemical Index"))
+  }
+}
+
+```
