@@ -13,3 +13,12 @@ summary(coolModel)
 anova(coolModel)
 plot(coolModel)
 ```
+
+
+```{r}
+coolModel2 <- lmer(stiffnessFrac ~ chemIndex + freq + amp + sqrt_cycle + (chemIndex + freq + amp):sqrt_cycle  + (1+sqrt_cycle|ID), data=foam_data_scaled)
+
+summary(coolModel2)
+anova(coolModel2)
+plot(coolModel2)
+```
