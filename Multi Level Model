@@ -1,0 +1,15 @@
+```{r}
+foam_data_scaled <- foam_data |>
+  filter(cycle <= 10000) |>
+  mutate(sqrt_cycle = sqrt(cycle)) |>
+  mutate_at(vars(freq, amp, sqrt_cycle), scale)
+  
+```
+
+```{r}
+coolModel <- lmer(stiffnessFrac ~ porosity + chemIndex + freq + amp + porosity:chemIndex + sqrt_cycle + (porosity + chemIndex + freq + amp + porosity:chemIndex):sqrt_cycle  + (1+sqrt_cycle|ID), data=foam_data_scaled)
+
+summary(coolModel)
+anova(coolModel)
+plot(coolModel)
+```
