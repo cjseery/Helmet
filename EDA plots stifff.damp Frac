@@ -1,0 +1,31 @@
+ggplot(foam_data3, aes(x = log(cycle), y = log(stiffnessFrac), color = chemIndex)) +  
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) +  # Add trend lines
+  labs(title = "log(Cycle) vs. log(StiffnessFrac)",
+       x = "log(Cycle)",
+       y = "log(StiffnessFrac)") +
+  theme_minimal()
+
+ggplot(foam_data3, aes(x = log(cycle), y = log(stiffnessFrac), color = porosity)) +  
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) +  # Add trend lines
+  labs(title = "log(Cycle) vs. log(StiffnessFrac)",
+       x = "log(Cycle)",
+       y = "log(StiffnessFrac)") +
+  theme_minimal()
+
+ggplot(foam_data3, aes(x = log(cycle), y = log(dampingFrac), color = chemIndex)) +  
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) +  # Add trend lines
+  labs(title = "log(Cycle) vs. log(dampingFrac)",
+       x = "log(Cycle)",
+       y = "log(dampingFrac)") +
+  theme_minimal()
+
+ggplot(foam_data3, aes(x = log(cycle), y = log(dampingFrac), color = porosity)) +  
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) +  # Add trend lines
+  labs(title = "log(Cycle) vs. log(dampingFrac)",
+       x = "log(Cycle)",
+       y = "log(dampingFrac)") +
+  theme_minimal()
