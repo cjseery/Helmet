@@ -1,0 +1,96 @@
+---
+title: "Final Models"
+author: "Yellow Team"
+date: "2024-04-18"
+output: pdf_document
+---
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+# Set so that long lines in R will be wrapped:
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=80), tidy=TRUE)
+```
+
+```{r}
+library(lme4)
+library(lmerTest)
+library(leaps)
+library(tidyverse)
+```
+
+## Data wrangling
+
+```{r}
+foam_data <- read.csv("HelmetFinal.csv")
+```
+
+```{r}
+foam_data_scaled <- foam_data |>
+  filter(cycle <= 10000 & cycle > 0)
+```
+
+## Damping Model
+
+```{r}
+regfit.full <- regsubsets(log(dampingFrac) ~ chemIndex + porosity + freq + amp + initialStrain + initialStress + log(cycle) + chemIndex:porosity + (chemIndex + porosity + freq + amp + initialStrain + initialStress + chemIndex:porosity)*log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+
+plot(regfit.full, scale = "bic")
+
+```
+
+**Theoretical Model**
+
+$log(dampingFrac) = \alpha_0 + \alpha_1*I(porosity = low) + \alpha_2*I(chemIndex = 2) + \alpha_3*I(chemIndex = 3) + \alpha_4*freq + \beta_0*log(cycle) + \beta_1*(I(porosity = low)*log(cycle)) + \beta_3*(I(chemIndex = 2)*log(cycle)) + \beta_4*(I(chemIndex = 3)*log(cycle)) + \beta_5*(freq*log(cycle)) + u_i + v_i*log(cycle) + \epsilon_{ij}$
+
+```{r}
+dampModel <- lmer(log(dampingFrac) ~ porosity + factor(chemIndex) + freq + log(cycle) + porosity:log(cycle) + freq:log(cycle) + factor(chemIndex):log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+
+plot(dampModel)
+qqnorm(resid(dampModel))
+qqline(resid(dampModel))
+```
+
+```{r}
+summary(dampModel)
+```
+
+```{r}
+re <- ranef(dampModel)$ID
+
+plot(re)
+```
+
+## Stiffness Model
+
+
+```{r}
+regfit.full <- regsubsets(log(stiffnessFrac) ~ chemIndex + porosity + freq + amp + initialStrain + initialStress + log(cycle) + (chemIndex + porosity + freq + amp + initialStrain + initialStress)*log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+#regfit.full <- regsubsets(stiffnessFrac ~ ., data = foam_data_scaled)
+plot(regfit.full, scale = 'bic')
+```
+
+**Theoretical Model**
+
+$log(stiffnessFrac) = \alpha_0 + \alpha_1*I(porosity = low)) + \alpha_2*I(chemIndex = 2) + \alpha_3*I(chemIndex = 3) + \alpha_4*I(chemIndex = 2)*I(porosity = low) + \alpha_5*I(chemIndex = 3)*I(porosity = low) + \beta_0*log(cycle) +  \beta_1*log(cycle)*I(porosity = low) + \beta_2*log(cycle)*I(chemIndex = 2) + \beta_3*log(cycle)*I(chemIndex = 2)*I(porosity = low) + \beta_4*log(cycle)*I(chemIndex = 3)*I(porosity = low) + u_i + v_i*log(cycle) + \epsilon_{ij}$
+
+```{r}
+FactorModel <- lmer(log(stiffnessFrac) ~  porosity + factor(chemIndex) + factor(chemIndex):porosity +  log(cycle) +  factor(chemIndex):log(cycle) + porosity:log(cycle) + factor(chemIndex):porosity:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+plot(FactorModel)
+qqnorm(resid(FactorModel))
+qqline(resid(FactorModel))
+```
+
+```{r}
+summary(FactorModel)
+```
+
+```{r}
+re <- ranef(FactorModel)$ID
+
+plot(re)
+```
+
+
+
+
+
+
