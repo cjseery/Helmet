@@ -1,0 +1,212 @@
+---
+title: "report rough draft"
+output: html_document
+date: "2024-04-18"
+---
+
+---
+title: "Helmet Foam Case Study Report"
+author: 'Katie Greene, Ava Harman, Chris Seery, Ian Stonecypher'
+date: 'April, 2024'
+format: pdf
+---
+
+```{r}
+#| echo: false
+#| include: false
+#| label: front-matter
+#| warning: false
+# clean up & set default chunk options
+rm(list = ls())
+knitr::opts_chunk$set(echo = FALSE)
+
+# packages
+library(tidyverse) # for example
+library(ggplot2) # for example
+library(car)       # for example
+library(tinytex)   # for example
+library(patchwork)
+foam_data <- read.csv("foamData.csv")
+
+foam_data_scaled <- foam_data |>
+  filter(cycle <= 10000 & cycle > 0)
+
+```
+
+
+## 1. Project Description
+
+This project comes to us from Moria Foster, from the Lawrence Livermore National Laboratory. Foster has been running experiments on the Colorado School of Mines campus to study the fatigue responses of stiffness and damping in different varieties of foam. In her designed experiment, pieces of foam were put into a universal load frame, which repeatedly compressed and decompressed each piece for thousands of cycles, and each piece had its stiffness and damping measured periodically. These measurements, as well as the parameters of each experimental run, were given to us to aid in the experiment’s analysis stage.
+
+Foster’s objective is to understand what effects the changes in stiffness and damping in a piece of foam under repeated light compressions. The goal of our analysis is to discover patterns and build models to provide this understanding. With this understanding, the U.S. Military could improve the foam padding in marine special combat helmets, ideally so they can survive at least 10 years of regular use.
+
+## 1.1 Research Questions
+
+**Question 1:** What parameters are impacting the stiffness and damping of foam used in military helmets?
+
+**Question 2:** How are these parameters impacting the fatigue response in stiffness and damping over time?
+
+
+## 1.2 Variables
+
+Explanatory Variables:
+
+|    Variable Name    |                   Description                                  |:--------------------|:---------------------------------------------------------------------------------------------|
+        ID            |  the unique identifier of the different foam pieces
+     chemIndex        |  the chemical makeup type of the foam. 1 = 79, 2 = 100, 3 = 121
+      porosity        |  the porosity level of the foam. Low = 71%, high = 81%
+       freq           |  the number of compressions per second (hz)
+        amp           |  the amplitude of the compressions
+    initialStrain     |  the initial measure of the strain of foam. (Originally labeled “strain”)
+    initialStress     |  the initial measure of the stress of the foam. (Originally labeled “stresskpa”)
+       cycle          |  the cycle number the measurement was taken at
+
+Aside from cycle, all of these explanatory variables are constant across all measurements of an individual foam piece.
+
+Response Variables:
+
+|    Variable Name    |                   Description                                        |:--------------------|:---------------------------------------------------------------------------------------------|
+     stiffness        |  measurement of the foam’s stiffness. (Originally labeled “E1_MPA”)
+      damping         |  measurement of the foam’s damping. (Originally labeled “delta_rad”)
+    stiffnessFrac     |  stiffness / (first stiffness measurement)
+     dampingFrac      |  tan(damping)/ tan(first damping measurement)
+
+The formulas for stiffnessFrac and dampingFrac were specified by Foster. She believed these would be more useful alternatives to studying raw stiffness and damping.
+
+We have initial concerns with the amount of data we have; whether there is enough to make a cause and effect conclusion.
+
+We reformatted our data from wide to long to make each observation represent one measurement as opposed to one piece of foam. This made the data much easier to access for statistical analysis.
+
+The sample code contained the chemical index, the porosity and the sample id of each foam. Using the separate function in dplyr, we separated these characteristics into distinct columns.
+
+We took out samples after 10,000…
+
+
+
+#  2. Exploratory Data Analysis (EDA)
+
+*Description of important variables.*
+- *summary statistics*
+- *missing Data*
+- *unusual or concerning observations*
+
+*Relevant summary figures that provide intuition for the research questions and/or inform important modeling decisions (correlation structure, etc).*
+
+
+*Describe important outcomes of the EDA that the reader should notice.*
+
+# 3. Statistical Analysis 
+
+```{r}
+#| echo: false
+#| label: fig-2
+#| warning: false
+#| fig-cap: "log(stiffnessFrac) vs log(cycle) by freq, chemIndex, and porosity"
+#| fig-align: "center"
+#| fig-width: 15
+#| fig-height: 5
+ggplot(foam_data_scaled, aes(y = stiffnessFrac, x = cycle)) + geom_point()
+sp1 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = freq))
+sp2 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
+sp3 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = porosity))
+
+combined <- sp1 + sp2 + sp3 + plot_layout(ncol = 2)
+
+combined
+```
+```{r}
+ggplot(foam_data_scaled, aes(y = dampingFrac, x = cycle)) + geom_point()
+ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = freq))
+ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
+ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = porosity))
+```
+*Describe statistical analysis in terms that your client will be able to understand and perhaps use in presenting their own research.  This section should summarize all relevant analyses that lead to your final conclusions/decisions/recommendations, but should NEVER include visible code (folded code chunks are fine) or unformatted software output.*
+
+- *Model Assumptions & how checked/verified (details left to appendix)*
+- *Interpretation of estimates/statistics/p-values IN CONTEXT*
+- *Enough detail that the model/analysis could be reproduced by another statistician*
+
+
+# 4. Recommendations 
+
+*Succinct response to each question laid out in 1.2.  This a much shorter version of section 3, and focuses on conclusions rather than the analyses.*
+
+**Question 1:**  
+
+**Question 2:**  
+
+*(all research questions in 1.1 and/or statistical question in 1.2 should be addressed, in the same order)*
+
+# 5. Resources 
+
+*List resources that your client might find useful*
+
+# 6. Additional Considerations
+
+- *Limitations to the recommendations*
+- *Concerns you may have about the study; suggestions for similar studies in future*
+- *Technical comments*
+  
+
+# Technical Appendix  
+
+*Detailed information and a copy of code and or software results.  Additional graphs and supporting figures may also be placed in the appendix.*
+
+
+### R Script
+```{r ref.label=c('front-matter', 'fig-example1','tbl-summarystats', 'fig-example2')}
+#| echo: true
+#| eval: false
+
+# Reprinted code chunks used previously for analysis
+```
+
+
+
+<!--
+Figure-making Examples: 
+
+For example, notice the way @fig-example1 shows a scatterplot.
+
+```{r}
+#| echo: false
+#| label: fig-example1
+#| warning: false
+#| fig-cap: "Fuel Efficiency as it relates to vehicle weight for a sample of cars."
+#| fig-align: "center"
+#| fig-width: 3
+#| fig-height: 3
+
+
+data("mtcars")
+gf_point(mpg~ wt, data = mtcars)
+```
+
+These are interesting remarks about data summaries.  The overall mean fuel economy in the data is `r mean(mtcars$mpg, na.rm = TRUE)` miles per gallon, which I can calculate in-line since it's very simple.  Most code requires a code chunk, but raw code and output should never appear in the body of the report.  Here's a nice table of summary statistics formatted for the report in @tbl-summarystats.
+
+```{r}
+#| echo: false
+#| label: tbl-summarystats
+#| tbl-cap: "Summary Statistics for Engine Displacement by Cylinders"
+
+favstats(disp ~ cyl, data = mtcars) %>%
+  knitr::kable()
+
+```
+
+Look at @fig-example2 to see what figure with subfigures looks like.
+
+```{r}
+#| label: fig-example2
+#| layout-ncol: 2
+#| fig-cap: "A figure with two subfigures!"
+#| fig-subcap:  
+#|   - "Line Plot 1"
+#|   - "Line Plot 2"
+
+
+plot(cars)
+plot(pressure)
+```
+
+-->
