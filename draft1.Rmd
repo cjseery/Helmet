@@ -118,15 +118,19 @@ The histogram shows the distribution of compression frequencies among the foam s
 #| fig-width: 10
 #| fig-height: 4
 
-p1 <- ggplot(foam_data_scaled, aes(y = stiffnessFrac, x = cycle)) + geom_point()
+p1 <- ggplot(foam_data_scaled, aes(y = stiffnessFrac, x = cycle, col=factor(ID))) +
+  geom_point() + 
+  theme(legend.position="none")
 
-p2 <- ggplot(foam_data_scaled, aes(y = dampingFrac, x = cycle)) + 
+p2 <- ggplot(foam_data_scaled, aes(y = dampingFrac, x = cycle, col=factor(ID))) + 
   geom_point() +
-  scale_y_continuous(limits = c(0.75, 1))
+  scale_y_continuous(limits = c(0.825, 1)) + 
+  theme(legend.position="none")
 
-p3 <- ggplot(foam_data_scaled, aes(y = dampingFrac, x = cycle)) + 
+p3 <- ggplot(foam_data_scaled, aes(y = dampingFrac, x = cycle, col=factor(ID))) + 
   geom_point() +
-  scale_y_continuous(limits = c(-30, 1))
+  scale_y_continuous(limits = c(-20, 1)) +
+  theme(legend.position="none")
 
 combined <- p1 + p2 + p3
 
@@ -135,16 +139,18 @@ combined
 
 
 ```
-In order to see how stiffnessFrac and dampingFrac change over time for all foams, we plotted a scatter plot for each vs cycle. StiffnessFrac seems to spread out in an umbrella shape, showing that as cycle increases the sample values seem to get further apart. For dampingFrac, there seems to be a general downward stretching of values as cycle increases, also showing us that as cycle increases sample values seem to spread out. However no major relationship appears to be present so futher analysis is required. 
+In order to see how stiffnessFrac and dampingFrac change over time for all foams, we plotted a scatter plot for each vs cycle. Dots of the same color were measured from the same foam sample. In the first plot, StiffnessFrac seems to spread out in an umbrella shape, showing that as cycle increases the sample values not only change, but get further apart. Cycle number looks like it has a relationship with stiffnessFrac, but that relationship looks different for each foam sample.
 
-We scaled the damping scatter plot so that the scale was from 0.75-1, given that all but 13 observations were in this range. The observations outside of this range all occured in the interval code N, which is the last interval code we have in our filtered data, most likely meaning that these foams broke in some way or the experiment failed.
+In the second plot, there seems to be a general downward stretching of dampingFrac values as cycle increases, also showing us that as cycle increases sample values seem to spread out. So cycle number looks like it has a negative relationship with dampingFrac, but that relationship still looks different for each foam sample.
+
+The second plot was scaled so that the scale was from 0.75-1, given that all but 13 dampingFrac observations were in this range. The observations outside of this range (included in the unscaled third plot) all occurred in the interval code N, which is the last interval code we have in our filtered data, most likely meaning that these foams broke in some way or the experiment failed.
 
 ```{r}
-foam_data_interval_N <- foam_data_scaled[foam_data_scaled$intervalcode == "N", ]
+foam_data_interval_N <- foam_data_scaled[foam_data_scaled$intervalCode == "N", ]
 
 ggplot(foam_data_interval_N, aes(y = stiffnessFrac, x = cycle)) + geom_point()
 
-foam_data_scaled$intervalcode == "N"
+foam_data_scaled$intervalCode == "N"
 
 
 ```
@@ -156,123 +162,120 @@ foam_data_scaled$intervalcode == "N"
 #| echo: false
 #| label: fig-3
 #| warning: false
-#| fig-cap: "log(stiffnessFrac) vs log(cycle) by freq, chemIndex, and porosity"
+#| fig-cap: "log(stiffnessFrac) vs log(cycle) by freq, and log(dampingFrac) vs log(cycle) by freq"
 #| fig-align: "center"
-#| fig-width: 18
+#| fig-width: 10
 #| fig-height: 5
 
 sp1 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = freq))
-sp2 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
-sp3 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = porosity))
+#sp2 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
+#sp3 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = porosity))
 
-combined <- sp1 + sp2 + sp3
+#combined <- sp1 + sp2 + sp3
 
+#combined
+
+dp1 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = freq))
+#dp2 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
+#dp3 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = porosity))
+
+#combined <- dp1 + dp2 + dp3
+
+#combined
+
+combined <- sp1 + dp1
 combined
 ```
 
-In order to understand how log(stiffnessFrac) behaves over log(cycle) given different characteristics, we have colored the samples in the plots by frequency, chemical index and porosity. These show the trends of the three main predictors we expect to use in our model and how they impact one of the responses. From the frequency graph, we see that higher frequencies have a more negative trend than lower frequencies. The chemIndex graph is not very conclusive, however the chemIndex 1 (actual chemIndex 79) seems to have a more positive trend while chemIndex 3 (actual chemIndex 121) seems to be slightly more negative and chemIndex 2 (actual chemIndex 100) has both positive and negative trends. Finally, the porosity graph is also not very conclusive because both high and low porosities have both positive and negative slopes. 
+In @fig-3 above, we logged the responses, and plotted them against the log of cycle. The relationships between log(cycle) and the logged responses look more linear than the relationships in @fig-2.
+
+In order to understand how log(stiffnessFrac) and log(dampingFrac) behave over log(cycle) given different frequencies, we also colored the samples in the plots above by frequency. For log(stiffnessFrac), we see that higher frequencies have a more negative trend than lower frequencies. For log(dampingFrac), we see that lower frequencies have a more negative trend than higher frequencies. So frequency looks related to both stiffnessFrac and dampingFrac.
+
 
 ```{r}
 #| echo: false
 #| label: fig-4
 #| warning: false
-#| fig-cap: "log(dampingFrac) vs log(cycle) by freq, chemIndex, and porosity"
+#| fig-cap: "log(stiffnessFrac) vs log(cycle) by chemIndex and porosity"
 #| fig-align: "center"
 #| fig-width: 18
-#| fig-height: 5
+#| fig-height: 8
 #| 
-dp1 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = freq))
-dp2 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
-dp3 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = porosity))
+sfc1 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data$porosity == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(color="red", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15)
+sfc2 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data$porosity == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(color="green", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15)
+sfc3 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data$porosity == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(color="blue", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15)
+sfc4 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(color="red", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15)
+sfc5 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(color="green", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15)
+sfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(col="blue", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15)
 
-combined <- dp1 + dp2 + dp3
-
+combined <- sfc1 + sfc2 + sfc3 + sfc4 + sfc5 + sfc6 + plot_layout(ncol = 3)
 combined
 ```
 
-These plots are the same as the previous plots except with log(dampingFrac) as the response. From the frequency graph, we see that lower frequencies have a more negative trend than lower frequencies. The chemIndex graph is not super conclusive since all three chemical indexes have both positive and negative trends. Finally, the porosity graph is not super conclusive because both high and low porosities have both positive and negative slopes, however the higher porosity tends to be more positive while the lower porosity is more negative. 
+These plots separate the log(stiffnessFrac) vs log(cycle) graph from above to show a better representation on how the interaction between chemical index and porosity impact stiffnessFrac. The top row shows only high porosity and the bottom row shows only low porosity samples. From left to right, the columns show chemical index 79, 100 and 121. We can see that the chemical index 79 has many samples where log(stiffnessFrac) trends upwards, whereas chemical indices 100 and 121 mostly trend downwards. This indicates a relationship between log(stiffnessFrac) and chemical index. Downward trends mean the stiffness decreases as cycle increases, which is not what we are looking for in a durable foam.
+
+We also see an effect from porosity. For chemical index 79, low porosity foam trends downward more often than high porosity foam, and for chemical index 100, low porosity foam trends upward more often than high porosity foam. So not only does porosity affect log(stiffnessFrac), but it effects it different ways for different porosities. This suggests a porosity:chemIndex interraction term would improve our model.
 
 
 ```{r}
 #| echo: false
 #| label: fig-5
 #| warning: false
-#| fig-cap: "stiffnessFrac vs cycle by chemIndex and porosity"
+#| fig-cap: "log(dampingFrac) vs log(cycle) for chemIndex and porosity"
 #| fig-align: "center"
 #| fig-width: 18
 #| fig-height: 8
 #| 
-sfc1 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 1 & foam_data$porosity == "high",], aes(x=cycle, y=stiffnessFrac)) +
+dfc1 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data_scaled$porosity == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(color="red", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-sfc2 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 2 & foam_data$porosity == "high",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125)
+dfc2 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data_scaled$porosity == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(color="green", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-sfc3 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 3 & foam_data$porosity == "high",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125)
+dfc3 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scaled$porosity == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(color="blue", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-sfc4 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 1 & foam_data$porosity == "low",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125)
+dfc4 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(color="red", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-sfc5 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 2 & foam_data$porosity == "low",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125)
+dfc5 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(color="green", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-sfc6 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 3 & foam_data$porosity == "low",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125)
+dfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(col="blue", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-
-combined <- sfc1 + sfc2 + sfc3 + sfc4 + sfc5 + sfc6 + plot_layout(ncol = 3)
-combined
-```
-
-These plots separate the graphs from above to show a better representation on how the interaction between chemical index and porosity impact stiffnessFrac. The top row is high porosity and from left to right the chemical index goes 79, 100, 121. We can see that the chemical index 79 has consitent samples with a stiffnessFrac greater than 1, wheresas 100 and 121 appear to have all values below 1, meaning the stiffness decreases as cycle increases, which is not what we are looking for in a durable foam. Therefore this suggets that chemical index is an important variable in the prediction of stiffnessFrac and we should highly consider using it in our model.
-
-
-```{r}
-#| echo: false
-#| label: fig-6
-#| warning: false
-#| fig-cap: "dampingFrac vs cycle for chemIndex and porosity"
-#| fig-align: "center"
-#| fig-width: 18
-#| fig-height: 8
-#| 
-dfc1 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 1 & foam_data$porosity == "high",], aes(x=cycle, y=dampingFrac)) +
-  geom_point(color="red", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-dfc2 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 2 & foam_data$porosity == "high",], aes(x=cycle, y=dampingFrac)) +
-  geom_point(color="green", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-dfc3 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 3 & foam_data$porosity == "high",], aes(x=cycle, y=dampingFrac)) +
-  geom_point(color="blue", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-dfc4 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 1 & foam_data$porosity == "low",], aes(x=cycle, y=dampingFrac)) +
-  geom_point(color="red", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-dfc5 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 2 & foam_data$porosity == "low",], aes(x=cycle, y=dampingFrac)) +
-  geom_point(color="green", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
-dfc6 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 3 & foam_data$porosity == "low",], aes(x=cycle, y=dampingFrac)) +
-  geom_point(col="blue", size=3) + 
-  geom_hline(yintercept = 1, linetype="dashed") +
-  ylim(0.7, 1.15)
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125)
 
 combined <- dfc1 + dfc2 + dfc3 + dfc4 + dfc5 + dfc6 + plot_layout(ncol = 3)
 combined
 ```
 
-These plots are the same as the plots above except with dampingFrac as the repsonse. Again, there appears to be a discernable difference in the dampingFrac over cycle by chemical index. Our chemical index of 79 appears to have consistent values between 0 and 1, indicating a general decrease in damping as cycle increases. For 121 and 100, we have a range of values above and below 1, with foams containig a chemical index of 121 having more regular and evenly spread values as opposed to 100 having a lot of values above 1 and then a group of vaues in the 0.9 range. This gives evidence to suggest that dampingFrac is influenced enough by chemical index to warrant including it in our model.
+These plots separate the log(dampingFrac) vs log(cycle) graph from above to show a better representation on how the interaction between chemical index and porosity impact dampingFrac. The data shown in the rows and columns are the same as in @fig-4. We can see differences in the log(dampingFrac) trends between different chemical indices, so there is likely a relationship present, but this relationship looks less pronounced than it was for the log(stiffnessFrac) trends.
+
+Porosity also appears to have some effect. Trends in log(dampingFrac) for chemical index 121 are more similar to each other for low porosity than for high porosity, and trends in log(dampingFrac) for chemical index 79 are bit more similar to each other for high porosity than for low porosity. This suggests a porosity:chemIndex interaction term would improve our damping model, but this is still less clear than it was for stiffness.
 
 
 # 3. Statistical Analysis 
