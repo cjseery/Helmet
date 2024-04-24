@@ -1,3 +1,8 @@
+---
+title: "Untitled"
+output: html_document
+date: "2024-04-24"
+---
 
 ---
 title: "Helmet Foam Case Study Report"
@@ -22,6 +27,8 @@ library(car)       # for example
 library(tinytex)   # for example
 library(patchwork)
 library(lme4)
+library(lmerTest)
+library(leaps)
 foam_data <- read.csv("foamData.csv")
 
 foam_data_scaled <- foam_data |>
@@ -284,7 +291,8 @@ Based on the initial research questions, we will be developing two separate mode
 
 In order to select our variables, we first started with a mixed model where all variables aside from cycle were treated as level two variables and log(cycle) was treated as a level one variable. In this context, the level two variables on their own will impact the intercept of our model and the interaction between log(cycle) and the other variables will impact the slope of our model. After starting with this full model, we manually removed variables from the model to increase the significance of the coefficients and to minimize the REML. From this process, we were able to create a model using the following predictors:
 
-|    Stiffness Model Predictors    |        Damping Model Predictors                                  |:---------------------------------|:------------------------------------|
+|    Stiffness Model Predictors    |        Damping Model Predictors                     
+|:---------------------------------|:------------------------------------|
             porosity               |             porosity
            chemIndex               |             chemIndex
            log(cycle)              |               freq
@@ -356,14 +364,7 @@ plot(re)
 
 **Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and porosity
 
-
-*(all research questions in 1.1 and/or statistical question in 1.2 should be addressed, in the same order)*
-
-# 5. Resources 
-
-*List resources that your client might find useful*
-
-# 6. Additional Considerations
+# 5. Additional Considerations
 
 One concern we have about our conclusions is that they were made based on relatively few observations. Our model for stiffness fraction, for example, consists of six possible trendlines, based on a foam’s porosity and chemical index, and most combinations of porosity and chemical index had fewer than ten foam samples in this experiment. We can confidently say that the coefficient estimates in both our models are non-zero, but the estimates could still be off. We would need more observations to get a more reliable estimate of the true coefficients.
 Compounding this problem, other treatment levels like amplitude and initial stress were not used evenly in the experiment. For example, a few samples were compressed with abnormal amplitude. If this had an effect on those samples’ stiffness and damping, it could have a big impact on the coefficient estimates since there weren’t enough other samples to balance it out. It could be that amplitude or some other factor has a significant effect on stiffness and damping, but we could not assess that impact confidently because there were not enough observations at each treatment level. For this reason, a predictor that should have been included in the model could have been left out.
@@ -382,56 +383,71 @@ For further and future studies, we recommend that more foam samples are tested, 
 ```{r ref.label=c('front-matter', 'fig-example1','tbl-summarystats', 'fig-example2')}
 #| echo: true
 #| eval: false
+foam_data <- read.csv("foamData.csv")
 
-# Reprinted code chunks used previously for analysis
+foam_data_scaled <- foam_data |>
+  filter(cycle <= 10000 & cycle > 0)
+
+FactorModel <- lmer(log(stiffnessFrac) ~  porosity + factor(chemIndex) + factor(chemIndex):porosity +  log(cycle) +  factor(chemIndex):log(cycle) + porosity:log(cycle) + factor(chemIndex):porosity:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+
+dampingModel <- lmer(log(dampingFrac) ~ porosity + factor(chemIndex) + freq + log(cycle) + porosity:log(cycle) + freq:log(cycle) + factor(chemIndex):log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+
+# Convert intervalCode to a factor with specified levels
+foam_data_scaled$intervalCode <- factor(foam_data_scaled$intervalCode, levels = c("A", "B", "C", "D","E", "F", "G", "H","I", "J", "K", "L","M", "N"))
+
+# summary of stiffnessFrac model 
+summary(FactorModel)
+
+# residuals and QQ plot of stiffnessFrac model
+plot(FactorModel)
+qqnorm(resid(FactorModel))
+qqline(resid(FactorModel))
+
+# random effects of stiffnessFrac model
+re <- ranef(FactorModel)$ID
+
+plot(re)
+
+# summary of dampingFrac model
+summary(dampingModel)
+
+# residuals and QQ plot of dampingFrac model
+plot(dampingModel)
+qqnorm(resid(dampingModel))
+qqline(resid(dampingModel))
+
+# random effects of dampingFrac model
+re <- ranef(dampingModel)$ID
+
+plot(re)
 ```
 
-
-
-<!--
-Figure-making Examples: 
-
-For example, notice the way @fig-example1 shows a scatterplot.
 
 ```{r}
 #| echo: false
 #| label: fig-example1
 #| warning: false
-#| fig-cap: "Fuel Efficiency as it relates to vehicle weight for a sample of cars."
+#| fig-cap: "Backward Selection for stiffnessFrac Predictors"
 #| fig-align: "center"
-#| fig-width: 3
-#| fig-height: 3
-
-
-data("mtcars")
-gf_point(mpg~ wt, data = mtcars)
+#| fig-width: 7
+#| fig-height: 5
+regfit.full <- regsubsets(log(stiffnessFrac) ~ chemIndex + porosity + freq + amp + initialStrain + initialStress + log(cycle) + (chemIndex + porosity + freq + amp + initialStrain + initialStress)*log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+#regfit.full <- regsubsets(stiffnessFrac ~ ., data = foam_data_scaled)
+plot(regfit.full, scale = 'bic')
 ```
-
-These are interesting remarks about data summaries.  The overall mean fuel economy in the data is `r mean(mtcars$mpg, na.rm = TRUE)` miles per gallon, which I can calculate in-line since it's very simple.  Most code requires a code chunk, but raw code and output should never appear in the body of the report.  Here's a nice table of summary statistics formatted for the report in @tbl-summarystats.
 
 ```{r}
 #| echo: false
-#| label: tbl-summarystats
-#| tbl-cap: "Summary Statistics for Engine Displacement by Cylinders"
-
-favstats(disp ~ cyl, data = mtcars) %>%
-  knitr::kable()
-
-```
-
-Look at @fig-example2 to see what figure with subfigures looks like.
-
-```{r}
 #| label: fig-example2
-#| layout-ncol: 2
-#| fig-cap: "A figure with two subfigures!"
-#| fig-subcap:  
-#|   - "Line Plot 1"
-#|   - "Line Plot 2"
+#| warning: false
+#| fig-cap: "Backward Selection for dampingFrac Predictors"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 5
+#| 
+regfit.full <- regsubsets(log(dampingFrac) ~ chemIndex + porosity + freq + amp + initialStrain + initialStress + log(cycle) + chemIndex:porosity + (chemIndex + porosity + freq + amp + initialStrain + initialStress + chemIndex:porosity)*log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
 
-
-plot(cars)
-plot(pressure)
+plot(regfit.full, scale = "bic")
 ```
 
--->
+@fig-example1 and @fig-example2 show the plots that we used to pick our predictors for our model. Since our main concerns for this analysis were with chemIndex and porosity, we chose the predictors with the highest bic starting at where those two predictors became significant. With stiffnessFrac this was at bic = -640 and with dampingFrac this was at -520. 
