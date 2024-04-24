@@ -26,10 +26,15 @@ library(ggplot2) # for example
 library(car)       # for example
 library(tinytex)   # for example
 library(patchwork)
+library(lme4)
 foam_data <- read.csv("foamData.csv")
 
 foam_data_scaled <- foam_data |>
   filter(cycle <= 10000 & cycle > 0)
+
+FactorModel <- lmer(log(stiffnessFrac) ~  porosity + factor(chemIndex) + factor(chemIndex):porosity +  log(cycle) +  factor(chemIndex):log(cycle) + porosity:log(cycle) + factor(chemIndex):porosity:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+
+dampingModel <- lmer(log(dampingFrac) ~ porosity + factor(chemIndex) + freq + log(cycle) + porosity:log(cycle) + freq:log(cycle) + factor(chemIndex):log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
 
 ```
 
@@ -85,55 +90,258 @@ We took out samples after 10,000…
 
 #  2. Exploratory Data Analysis (EDA)
 
-*Description of important variables.*
-- *summary statistics*
-- *missing Data*
-- *unusual or concerning observations*
+There was no missing data, but some foam samples had observations taken at very high cycle numbers (above 10000) while observations from other samples stopped at 10000. By Foster’s recommendation, all observations after 10000 cycles were ignored.
 
-*Relevant summary figures that provide intuition for the research questions and/or inform important modeling decisions (correlation structure, etc).*
+There were a few concerning observations with negative values of stiffness and/or damping. At Foster’s instruction, we converted the negative stiffness values to positive, and left the negative damping values how they were.
 
+```{r}
+foam_Samples <- foam_data[ ,c("ID", "chemIndex", "porosity", "freq", "amp", "initialStrain", "initialStress")]
+foam_Samples <- unique(foam_Samples)
 
-*Describe important outcomes of the EDA that the reader should notice.*
+count(foam_Samples, chemIndex)
+count(foam_Samples, porosity)
+count(foam_Samples, chemIndex, porosity)
+```
 
-# 3. Statistical Analysis 
+The counts above show that unequal amounts of each foam type were tested. For instance, only five low-porosity foams with chemical index 2 were tested, and there were more foams with chemical index 1 than there were with chemical indexes 2 and 3. It will be more difficult to make solid conclusions about types of foam with fewer samples.
+
+```{r}
+#| echo: false
+#| label: fig-1
+#| warning: false
+#| fig-cap: "Histogram of Foam Samples"
+#| fig-align: "center"
+#| fig-width: 10
+#| fig-height: 4
+#| 
+ggplot(foam_Samples, aes(x=freq)) +
+  geom_histogram()
+```
+
+The treatment levels of the foam pieces were uneven as well. The histogram above shows that some compression frequencies were tried on many more samples than other frequencies were. If one of these underrepresented frequencies has an impact on the response, we will not be able to conclude this confidently. 
+
 
 ```{r}
 #| echo: false
 #| label: fig-2
 #| warning: false
+#| fig-cap: "siffnessFrac vs cycle"
+#| fig-align: "center"
+#| fig-width: 10
+#| fig-height: 4
+
+p1 <- ggplot(foam_data_scaled, aes(y = stiffnessFrac, x = cycle)) + geom_point()
+
+p2 <- ggplot(foam_data_scaled, aes(y = dampingFrac, x = cycle)) + geom_point()
+
+combined <- p1 + p2
+
+combined
+```
+
+We first explored the relationship between our responses, stiffnessFrac and dampingFrac, and cycle. These have two very interesting trends. Then, we decided to log both the response and cycle in order to get a more linear trend that is better for interpretation. 
+
+```{r}
+#| echo: false
+#| label: fig-3
+#| warning: false
 #| fig-cap: "log(stiffnessFrac) vs log(cycle) by freq, chemIndex, and porosity"
 #| fig-align: "center"
-#| fig-width: 15
+#| fig-width: 18
 #| fig-height: 5
-ggplot(foam_data_scaled, aes(y = stiffnessFrac, x = cycle)) + geom_point()
+
 sp1 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = freq))
 sp2 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
 sp3 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = porosity))
 
-combined <- sp1 + sp2 + sp3 + plot_layout(ncol = 2)
+combined <- sp1 + sp2 + sp3
 
 combined
 ```
+
+These plots show the results of log(stiffnessFrac) vs log(cycle) separated by frequency, chemIndex, and porosity. These show the trends of the three main predictors we expect to use in our model and how they impact one of the responses. From the frequency graph, we see that higher frequencies have a more negative trend than lower frequencies. The chemIndex graph is not super conclusive, however the chemIndex 1 (actual chemIndex 79) seems to have a more positive trend while chemIndex 3 (actual chemIndex 121) seems to be slightly more negative and chemIndex 2 (actual chemIndex 100) has both positive and negative trends. Finally, the porosity graph is not super conclusive because both high and low porosities have both positive and negative slopes. 
+
 ```{r}
-ggplot(foam_data_scaled, aes(y = dampingFrac, x = cycle)) + geom_point()
-ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = freq))
-ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
-ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = porosity))
+#| echo: false
+#| label: fig-4
+#| warning: false
+#| fig-cap: "log(dampingFrac) vs log(cycle) by freq, chemIndex, and porosity"
+#| fig-align: "center"
+#| fig-width: 18
+#| fig-height: 5
+#| 
+dp1 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = freq))
+dp2 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
+dp3 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = porosity))
+
+combined <- dp1 + dp2 + dp3
+
+combined
 ```
-*Describe statistical analysis in terms that your client will be able to understand and perhaps use in presenting their own research.  This section should summarize all relevant analyses that lead to your final conclusions/decisions/recommendations, but should NEVER include visible code (folded code chunks are fine) or unformatted software output.*
 
-- *Model Assumptions & how checked/verified (details left to appendix)*
-- *Interpretation of estimates/statistics/p-values IN CONTEXT*
-- *Enough detail that the model/analysis could be reproduced by another statistician*
+These plots are the same as the previous plots except with log(dampingFrac) as the response. From the frequency graph, we see that lower frequencies have a more negative trend than lower frequencies. The chemIndex graph is not super conclusive since all three chemical indexes have both positive and negative trends. Finally, the porosity graph is not super conclusive because both high and low porosities have both positive and negative slopes, however the higher porosity tends to be more positive while the lower porosity is more negative. 
 
+
+```{r}
+#| echo: false
+#| label: fig-5
+#| warning: false
+#| fig-cap: "stiffnessFrac vs cycle by chemIndex and porosity"
+#| fig-align: "center"
+#| fig-width: 18
+#| fig-height: 8
+#| 
+sfc1 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 1 & foam_data$porosity == "high",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_point(color="red", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+sfc2 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 2 & foam_data$porosity == "high",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_point(color="green", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+sfc3 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 3 & foam_data$porosity == "high",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_point(color="blue", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+sfc4 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 1 & foam_data$porosity == "low",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_point(color="red", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+sfc5 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 2 & foam_data$porosity == "low",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_point(color="green", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+sfc6 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 3 & foam_data$porosity == "low",], aes(x=cycle, y=stiffnessFrac)) +
+  geom_point(col="blue", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+
+combined <- sfc1 + sfc2 + sfc3 + sfc4 + sfc5 + sfc6 + plot_layout(ncol = 3)
+combined
+```
+
+These plots separate the graphs from above to show a better representation on how the interaction between chemical index and porosity impact stiffnessFrac. The top row is high porosity and from left to right the chemical index goes 79, 100, 121. 
+
+
+```{r}
+#| echo: false
+#| label: fig-6
+#| warning: false
+#| fig-cap: "dampingFrac vs cycle for chemIndex and porosity"
+#| fig-align: "center"
+#| fig-width: 18
+#| fig-height: 8
+#| 
+dfc1 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 1 & foam_data$porosity == "high",], aes(x=cycle, y=dampingFrac)) +
+  geom_point(color="red", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+dfc2 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 2 & foam_data$porosity == "high",], aes(x=cycle, y=dampingFrac)) +
+  geom_point(color="green", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+dfc3 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 3 & foam_data$porosity == "high",], aes(x=cycle, y=dampingFrac)) +
+  geom_point(color="blue", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+dfc4 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 1 & foam_data$porosity == "low",], aes(x=cycle, y=dampingFrac)) +
+  geom_point(color="red", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+dfc5 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 2 & foam_data$porosity == "low",], aes(x=cycle, y=dampingFrac)) +
+  geom_point(color="green", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+dfc6 <- ggplot(foam_data[foam_data$cycle <= 10000 & foam_data$cycle > 0 & foam_data$chemIndex == 3 & foam_data$porosity == "low",], aes(x=cycle, y=dampingFrac)) +
+  geom_point(col="blue", size=3) + 
+  geom_hline(yintercept = 1, linetype="dashed") +
+  ylim(0.7, 1.15)
+
+combined <- dfc1 + dfc2 + dfc3 + dfc4 + dfc5 + dfc6 + plot_layout(ncol = 3)
+combined
+```
+
+These plots are the same as the plots above except with dampingFrac as the repsonse. 
+
+
+# 3. Statistical Analysis 
+
+Based on the initial research questions, we will be developing two separate models: one for stiffness fraction and the other for damping fraction. Due to the experimental design and the fact that our observations are not independent of each other, we used a mixed model format for our predictions.
+
+In order to select our variables, we first started with a mixed model where all variables aside from cycle were treated as level two variables and log(cycle) was treated as a level one variable. In this context, the level two variables on their own will impact the intercept of our model and the interaction between log(cycle) and the other variables will impact the slope of our model. After starting with this full model, we manually removed variables from the model to increase the significance of the coefficients and to minimize the REML. From this process, we were able to create a model using the following predictors:
+
+|    Stiffness Model Predictors    |        Damping Model Predictors                                  |:---------------------------------|:------------------------------------|
+            porosity               |             porosity
+           chemIndex               |             chemIndex
+           log(cycle)              |               freq
+       porosity:chemIndex          |             log(cycle)
+       chemIndex:log(cycle)        |          porosity:log(cycle)
+       porosity:log(cycle)         |         chemIndex:log(cycle)
+  porosity:chemIndex:log(cycle)    |            freq:log(cycle)
+   
+# 3.1 Stiffness
+
+To best predict the value of log(stiffness fraction), we used the following model:
+$$log(stiffnessFrac) = \alpha_0 + \alpha_1*I(porosity = low)) + \alpha_2*I(chemIndex = 2) + \alpha_3*I(chemIndex = 3) + \alpha_4*I(chemIndex = 2)*I(porosity = low) + \alpha_5*I(chemIndex = 3)*I(porosity = low) + \beta_0*log(cycle) +  \beta_1*log(cycle)*I(porosity = low) + \beta_2*log(cycle)*I(chemIndex = 2) + \beta_3*log(cycle)*I(chemIndex = 2)*I(porosity = low) + \beta_4*log(cycle)*I(chemIndex = 3)*I(porosity = low) + u_i + v_i*log(cycle) + \epsilon_{ij}$$
+
+From the statistical summary below we see a high significance in our coefficients. The p-value for every term has a significance below five percent, meaning that there is a significant relationship between each of the terms and the response variable. The REML is also extremely small which leads us to conclude that this model fits the data very well and has minimal error. The coefficients not relating to cycle are impacting the initial stiffness of the foam at time zero. The variable that has the most positive impact on the initial stiffness is having a chemical index of 2. 
+
+```{r, echo = FALSE}
+summary(FactorModel)
+```
+
+We also assessed the model to see how it met the conditions of a predictive model. From the first plot, we see that there appears to be some sinusoidal behavior at the beginning and the middle of the shape has a larger range than the rest of the plot. Since the range of the plot is so small, we can conclude that the equal variance condition is being met. We also do not see any flaring or nonlinear movement so the linearity condition is also being met. The last plot shows some tailing on the ends but nothing too concerning. This concludes that all conditions are being met so this model is valid for the purpose of prediction.
+
+```{r, echo = FALSE}
+plot(FactorModel)
+qqnorm(resid(FactorModel))
+qqline(resid(FactorModel))
+```
+
+Lastly, given that we are using a mixed effects model, it is necessary to explore the random effects associated with the model. From the plot below, we notice that as the intercept increases, the slope decreases. This is a very defined trend and supports our conclusion that a mixed model should be used. We would expect to see that each of the foams starts at a similar stiffness fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
+
+```{r, echo = FALSE}
+re <- ranef(FactorModel)$ID
+
+plot(re)
+```
+
+#	3.2 Damping
+
+To best predict the value of log(damping fraction), we used this model:
+$$log(dampingFrac) = \alpha_0 + \alpha_1*I(porosity = low) + \alpha_2*I(chemIndex = 2) + \alpha_3*I(chemIndex = 3) + \alpha_4*freq + \beta_0*log(cycle) + \beta_1*(I(porosity = low)*log(cycle)) + \beta_3*(I(chemIndex = 2)*log(cycle)) + \beta_4*(I(chemIndex = 3)*log(cycle)) + \beta_5*(freq*log(cycle)) + u_i + v_i*log(cycle) + \epsilon_{ij}$$.
+
+The summary of this model shows a high significance in almost all of our coefficients through small p-values. The only value that does not show a significant p-value is frequency, however we chose to keep that in the model because of how significant the interaction between frequency and log(cycle) is. This model has multiple interactions: porosity and log(cycle), frequency and log(cycle), and chemical index and log(cycle). These interactions show that if all other variables are held constant, there is a combined effect of these interactions on the response variable. Since the REML is very negative which shows that the model fits the data and there is minimal error. 
+
+```{r, echo = FALSE}
+summary(dampingModel)
+```
+
+From the diagnostic plots, we first look at the residuals vs fitted plot. From this plot we can see that there is a mostly linear trend with only a few straggling points throughout. The linearity condition is met since there is no major trend to contradict it. Also, the equal variance condition is met since there are only a couple of points that have concerningly high residuals. In the normal Q-Q plot, there is some tailing at both ends, but nothing to cause extreme concern so the normality condition is met. Since all three conditions are met, this model is valid for the purpose of prediction. 
+
+```{r, echo = FALSE}
+plot(dampingModel)
+qqnorm(resid(dampingModel))
+qqline(resid(dampingModel))
+```
+
+Lastly, we must look at the random effects of our model. Like the stiffness model, as the intercept increases, the slope decreases. Although the trend is not as linear as the stiffness model, it still supports our conclusion that a mixed model should be used. Again, we would expect to see that each of the foams starts at a similar dampint fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
+
+```{r, echo = FALSE}
+re <- ranef(dampingModel)$ID
+
+plot(re)
+```
 
 # 4. Recommendations 
 
 *Succinct response to each question laid out in 1.2.  This a much shorter version of section 3, and focuses on conclusions rather than the analyses.*
 
-**Question 1:**  
+**Question 1:** We see that porosity, chemical index, and time have the most significant effects on damping and stiffness. Frequency also has a significant effect but only on damping.
 
-**Question 2:**  
+
+**Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and porosity
+
 
 *(all research questions in 1.1 and/or statistical question in 1.2 should be addressed, in the same order)*
 
@@ -143,10 +351,13 @@ ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point
 
 # 6. Additional Considerations
 
-- *Limitations to the recommendations*
-- *Concerns you may have about the study; suggestions for similar studies in future*
-- *Technical comments*
-  
+One concern we have about our conclusions is that they were made based on relatively few observations. Our model for stiffness fraction, for example, consists of six possible trendlines, based on a foam’s porosity and chemical index, and most combinations of porosity and chemical index had fewer than ten foam samples in this experiment. We can confidently say that the coefficient estimates in both our models are non-zero, but the estimates could still be off. We would need more observations to get a more reliable estimate of the true coefficients.
+Compounding this problem, other treatment levels like amplitude and initial stress were not used evenly in the experiment. For example, a few samples were compressed with abnormal amplitude. If this had an effect on those samples’ stiffness and damping, it could have a big impact on the coefficient estimates since there weren’t enough other samples to balance it out. It could be that amplitude or some other factor has a significant effect on stiffness and damping, but we could not assess that impact confidently because there were not enough observations at each treatment level. For this reason, a predictor that should have been included in the model could have been left out.
+
+Another consideration is that our models predict the log of stiffness fraction and the log of damping fraction linearly with the log of cycle number, which is a poor approximation in some cases. It is possible that models that are quadratic in log cycle number could have fit the data with slightly better accuracy, but these models would be harder to interpret. So our final models prioritize understanding the relationship between the responses and the predictors, possibly at the expense of accuracy.
+
+For further and future studies, we recommend that more foam samples are tested, so that there are more observations to work with. The same number of each type of foam should be used, and the treatments such as amplitude and initial stress should be assigned evenly, so each treatment level is fully tested on each type of foam. This will allow for more trustworthy models.
+
 
 # Technical Appendix  
 
