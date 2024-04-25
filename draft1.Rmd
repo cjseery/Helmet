@@ -293,7 +293,7 @@ Porosity also appears to have some effect. Trends in log(dampingFrac) for chemic
 
 Based on the initial research questions, we will be developing two separate models: one for stiffness fraction and the other for damping fraction. Due to the experimental design and the fact that our observations are not independent of each other, we used a mixed model format for our predictions.
 
-In order to select our variables, we first started with a mixed model where all variables aside from cycle were treated as level two variables and log(cycle) was treated as a level one variable. In this context, the level two variables on their own will impact the intercept of our model and the interaction between log(cycle) and the other variables will impact the slope of our model. After starting with this full model, we manually removed variables from the model to increase the significance of the coefficients and to minimize the REML. From this process, we were able to create a model using the following predictors:
+In order to select our variables, we first started with a mixed model where all variables aside from log(cycle) were treated as level two variables and log(cycle) was treated as a level one variable. In this context, the level two variables on their own will impact the intercept of our model and the interaction between log(cycle) and the other variables will impact the slope of our model. After starting with this full model, we manually removed variables from the model to increase the significance of the coefficients and to minimize the REML. From this process, we were able to create a model using the following predictors:
 
 |    Stiffness Model Predictors    |        Damping Model Predictors                     
 |:---------------------------------|:------------------------------------|
@@ -308,25 +308,57 @@ In order to select our variables, we first started with a mixed model where all 
 # 3.1 Stiffness
 
 To best predict the value of log(stiffness fraction), we used the following model:
-$$log(stiffnessFrac) = \alpha_0 + \alpha_1*I(porosity = low)) + \alpha_2*I(chemIndex = 2) + \alpha_3*I(chemIndex = 3) + \alpha_4*I(chemIndex = 2)*I(porosity = low) + \alpha_5*I(chemIndex = 3)*I(porosity = low) + \beta_0*log(cycle) +  \beta_1*log(cycle)*I(porosity = low) + \beta_2*log(cycle)*I(chemIndex = 2) + \beta_3*log(cycle)*I(chemIndex = 2)*I(porosity = low) + \beta_4*log(cycle)*I(chemIndex = 3)*I(porosity = low) + u_i + v_i*log(cycle) + \epsilon_{ij}$$
 
-From the statistical summary below we see a high significance in our coefficients. The p-value for every term has a significance below five percent, meaning that there is a significant relationship between each of the terms and the response variable. The REML is also extremely small which leads us to conclude that this model fits the data very well and has minimal error. The coefficients not relating to cycle are impacting the initial stiffness of the foam at time zero. The variable that has the most positive impact on the initial stiffness is having a chemical index of 2. 
+$\log(\text{stiffnessFrac}) = \alpha_0 + \alpha_1*I(\text{porosity} = \text{low})) + \alpha_2*I(\text{chemIndex} = 2)$\newline
+$+\alpha_3*I(\text{chemIndex} = 3)+\alpha_4*I(\text{chemIndex} = 2)*I(\text{porosity} = low)$\newline
+$+\alpha_5*I(\text{chemIndex} = 3)*I(\text{porosity} = low)+\beta_0*\log(\text{cycle}) +  \beta_1*\log(\text{cycle})*I(\text{porosity} = \text{low})$\newline
+$+\beta_2*\log(\text{cycle})*I(\text{chemIndex} = 2)+\beta_3*\log(\text{cycle})*I(\text{chemIndex} = 2)*I(\text{porosity} = \text{low})$\newline
+$+\beta_4*\log(\text{cycle})*I(\text{chemIndex} = 3)*I(\text{porosity} = \text{low})+ u_i + v_i*\log(\text{cycle}) + \epsilon_{ij}$
+
+From the statistical summary below we see a high significance in our coefficients. The p-value for every term has a significance below five percent, meaning that there is a significant relationship between each of the terms and the response variable. The REML is also extremely low which leads us to conclude that this model fits the data very well and has minimal error. The coefficients not relating to cycle are impacting the initial stiffness of the foam at time zero. The variable that has the most positive impact on the initial stiffness is having a chemical index of 2. 
 
 ```{r, echo = FALSE}
 summary(FactorModel)
 ```
 
-We also assessed the model to see how it met the conditions of a predictive model. From the first plot, we see that there appears to be some sinusoidal behavior at the beginning and the middle of the shape has a larger range than the rest of the plot. Since the range of the plot is so small, we can conclude that the equal variance condition is being met. We also do not see any flaring or nonlinear movement so the linearity condition is also being met. The last plot shows some tailing on the ends but nothing too concerning. This concludes that all conditions are being met so this model is valid for the purpose of prediction.
+We also assessed the model to see how it met the conditions of a predictive model. From @fig-6, we see that there appears to be some sinusoidal behavior at the beginning and the middle of the shape has a larger range than the rest of the plot. Since the range of the plot is so small, we can conclude that the equal variance condition is being met. We also do not see any flaring or nonlinear movement so the linearity condition is also being met. The QQ plot in #fig-7 shows some tailing on the ends but nothing too concerning. This concludes that all conditions are being met so this model is valid for the purpose of prediction.
 
 ```{r, echo = FALSE}
+#| echo: false
+#| label: fig-6
+#| warning: false
+#| fig-cap: "Residual Plot of Stiffness Fraction Model"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
+
 plot(FactorModel)
+```
+
+```{r, echo = FALSE}
+#| echo: false
+#| label: fig-7
+#| warning: false
+#| fig-cap: "QQ Plot of Stiffness Fraction Model"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
+
 qqnorm(resid(FactorModel))
 qqline(resid(FactorModel))
 ```
 
-Lastly, given that we are using a mixed effects model, it is necessary to explore the random effects associated with the model. From the plot below, we notice that as the intercept increases, the slope decreases. This is a very defined trend and supports our conclusion that a mixed model should be used. We would expect to see that each of the foams starts at a similar stiffness fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
+Lastly, given that we are using a mixed effects model, it is necessary to explore the random effects associated with the model. From @fig-8, we notice that as the intercept increases, the slope decreases. This is a very defined trend and supports our conclusion that a mixed model should be used. We would expect to see that each of the foams starts at a similar stiffness fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
 
 ```{r, echo = FALSE}
+#| echo: false
+#| label: fig-8
+#| warning: false
+#| fig-cap: "Intercept Rand Effects vs. Slope Rand Effects"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
+
 re <- ranef(FactorModel)$ID
 
 plot(re)
@@ -335,25 +367,55 @@ plot(re)
 #	3.2 Damping
 
 To best predict the value of log(damping fraction), we used this model:
-$$log(dampingFrac) = \alpha_0 + \alpha_1*I(porosity = low) + \alpha_2*I(chemIndex = 2) + \alpha_3*I(chemIndex = 3) + \alpha_4*freq + \beta_0*log(cycle) + \beta_1*(I(porosity = low)*log(cycle)) + \beta_3*(I(chemIndex = 2)*log(cycle)) + \beta_4*(I(chemIndex = 3)*log(cycle)) + \beta_5*(freq*log(cycle)) + u_i + v_i*log(cycle) + \epsilon_{ij}$$.
 
-The summary of this model shows a high significance in almost all of our coefficients through small p-values. The only value that does not show a significant p-value is frequency, however we chose to keep that in the model because of how significant the interaction between frequency and log(cycle) is. This model has multiple interactions: porosity and log(cycle), frequency and log(cycle), and chemical index and log(cycle). These interactions show that if all other variables are held constant, there is a combined effect of these interactions on the response variable. Since the REML is very negative which shows that the model fits the data and there is minimal error. 
+$\log(\text{dampingFrac}) = \alpha_0 + \alpha_1*I(\text{porosity} = \text{low}) + \alpha_2*I(\text{chemIndex} = 2) + \alpha_3*I(\text{chemIndex} = 3)$\newline
+$+\alpha_4*\text{freq} + \beta_0*\log(\text{cycle}) + \beta_1*(I(\text{porosity} = \text{low})*\log(\text{cycle}))$\newline
+$+\beta_3*(I(\text{chemIndex} = 2)*\log(\text{cycle})) + \beta_4*(I(\text{chemIndex} = 3)*\log(\text{cycle}))$\newline
+$+\beta_5*(\text{freq}*\log(\text{cycle})) + u_i + v_i*\log(\text{cycle}) + \epsilon_{ij}$.
+
+The summary of this model shows a high significance in almost all of our coefficients through small p-values. The only value that does not show a significant p-value is frequency, however we chose to keep that in the model because of how significant the interaction between frequency and log(cycle) is. This model has multiple interactions: porosity and log(cycle), frequency and log(cycle), and chemical index and log(cycle). These interactions show that if all other variables are held constant, there is a combined effect of these interactions on the response variable. The REML is very negative, which shows that the model fits the data and there is minimal error. 
 
 ```{r, echo = FALSE}
 summary(dampingModel)
 ```
 
-From the diagnostic plots, we first look at the residuals vs fitted plot. From this plot we can see that there is a mostly linear trend with only a few straggling points throughout. The linearity condition is met since there is no major trend to contradict it. Also, the equal variance condition is met since there are only a couple of points that have concerningly high residuals. In the normal Q-Q plot, there is some tailing at both ends, but nothing to cause extreme concern so the normality condition is met. Since all three conditions are met, this model is valid for the purpose of prediction. 
+From the diagnostic plots, we first look at the residuals vs fitted plot in @fig-9. From this plot we can see that there is a mostly linear trend with only a few straggling points throughout. The linearity condition is met since there is no major trend to contradict it. Also, the equal variance condition is met since there are only a couple of points that have concerningly high residuals. In the normal Q-Q plot in @fig-10, there is some tailing at both ends, but nothing to cause extreme concern so the normality condition is met. Since all three conditions are met, this model is valid for the purpose of prediction. 
 
 ```{r, echo = FALSE}
+#| echo: false
+#| label: fig-9
+#| warning: false
+#| fig-cap: "Residual Plot of Damping Fraction Model"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
+
 plot(dampingModel)
+```
+
+```{r, echo = FALSE}
+#| echo: false
+#| label: fig-10
+#| warning: false
+#| fig-cap: "QQ Plot of Damping Fraction Model"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
 qqnorm(resid(dampingModel))
 qqline(resid(dampingModel))
 ```
 
-Lastly, we must look at the random effects of our model. Like the stiffness model, as the intercept increases, the slope decreases. Although the trend is not as linear as the stiffness model, it still supports our conclusion that a mixed model should be used. Again, we would expect to see that each of the foams starts at a similar dampint fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
+Lastly, we must look at the random effects of our model in @fig-11. Like the stiffness model, as the intercept increases, the slope decreases. Although the trend is not as linear as the stiffness model, it still supports our conclusion that a mixed model should be used. Again, we would expect to see that each of the foams starts at a similar damping fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
 
 ```{r, echo = FALSE}
+#| echo: false
+#| label: fig-11
+#| warning: false
+#| fig-cap: "Intercept Rand Effects vs. Slope Rand Effects"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
+
 re <- ranef(dampingModel)$ID
 
 plot(re)
@@ -361,16 +423,15 @@ plot(re)
 
 # 4. Recommendations 
 
-*Succinct response to each question laid out in 1.2.  This a much shorter version of section 3, and focuses on conclusions rather than the analyses.*
-
-**Question 1:** We see that porosity, chemical index, and time have the most significant effects on damping and stiffness. Frequency also has a significant effect but only on damping.
+**Question 1:** We see that porosity, chemical index, and cycle number have the most significant effects on damping and stiffness. Frequency also has a significant effect, but only on damping.
 
 
-**Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and porosity
+**Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and porosity.
 
 # 5. Additional Considerations
 
-One concern we have about our conclusions is that they were made based on relatively few observations. Our model for stiffness fraction, for example, consists of six possible trendlines, based on a foam’s porosity and chemical index, and most combinations of porosity and chemical index had fewer than ten foam samples in this experiment. We can confidently say that the coefficient estimates in both our models are non-zero, but the estimates could still be off. We would need more observations to get a more reliable estimate of the true coefficients.
+One concern we have about our conclusions is that they were made based on relatively few observations. Our model for stiffness fraction, for example, consists of six possible trendlines, based on a foam’s porosity and chemical index, and most combinations of porosity and chemical index had fewer than ten foam samples in this experiment. We can confidently say that the coefficient estimates in both our models are non-zero, but the estimates could still be off from their true values. We would need more observations to get a more reliable estimate of the true coefficients.
+
 Compounding this problem, other treatment levels like amplitude and initial stress were not used evenly in the experiment. For example, a few samples were compressed with abnormal amplitude. If this had an effect on those samples’ stiffness and damping, it could have a big impact on the coefficient estimates since there weren’t enough other samples to balance it out. It could be that amplitude or some other factor has a significant effect on stiffness and damping, but we could not assess that impact confidently because there were not enough observations at each treatment level. For this reason, a predictor that should have been included in the model could have been left out.
 
 Another consideration is that our models predict the log of stiffness fraction and the log of damping fraction linearly with the log of cycle number, which is a poor approximation in some cases. It is possible that models that are quadratic in log cycle number could have fit the data with slightly better accuracy, but these models would be harder to interpret. So our final models prioritize understanding the relationship between the responses and the predictors, possibly at the expense of accuracy.
@@ -379,9 +440,6 @@ For further and future studies, we recommend that more foam samples are tested, 
 
 
 # Technical Appendix  
-
-*Detailed information and a copy of code and or software results.  Additional graphs and supporting figures may also be placed in the appendix.*
-
 
 ### R Script
 ```{r ref.label=c('front-matter', 'fig-example1','tbl-summarystats', 'fig-example2')}
