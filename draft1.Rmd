@@ -91,6 +91,8 @@ Concerns regarding the data's adequacy for drawing cause-and-effect conclusions 
 
 There were a few concerning observations with negative values of stiffness and/or damping. At Foster’s instruction, we converted the negative stiffness values to positive, and left the negative damping values how they were.
 
+Printed below are how many of each type of foam sample was tested:
+
 ```{r}
 foam_Samples <- foam_data[ ,c("ID", "chemIndex", "porosity", "freq", "amp", "initialStrain", "initialStress")]
 foam_Samples <- unique(foam_Samples)
@@ -100,13 +102,13 @@ count(foam_Samples, porosity)
 count(foam_Samples, chemIndex, porosity)
 ```
 
-The counts above show that unequal amounts of each foam type were tested. For instance, only five low-porosity foams with chemical index 2 were tested, and there were more foams with chemical index 1 than there were with chemical indexes 2 and 3. It will be more difficult to make solid conclusions about types of foam with fewer samples.
+The counts above show that unequal amounts of each foam type were tested. If a specific type of foam (like low-porosity foam with chemical index 2) has very few observations, it will be more difficult to make solid conclusions about this type of foam. Even the foam types with more samples still have relatively few, so making solid conclusions for these could be difficult as well.
 
 ```{r}
 #| echo: false
 #| label: fig-1
 #| warning: false
-#| fig-cap: "Histogram of Foam Samples"
+#| fig-cap: "Histogram of Frequencies Tested"
 #| fig-align: "center"
 #| fig-width: 10
 #| fig-height: 4
@@ -115,7 +117,7 @@ ggplot(foam_Samples, aes(x=freq)) +
   geom_histogram()
 ```
 
-The histogram shows the distribution of compression frequencies among the foam samples. The uneven distribution suggests that certain compression frequencies were tested more frequently than others. This non-uniformity in sample distribution might impact the reliability of conclusions drawn from the analysis, especially if frequencies with fewer samples have significant effects on the response variables.
+The histogram in @fig-1 shows the distribution of compression frequencies among the foam samples. The uneven distribution suggests that certain compression frequencies were tested more frequently than others. This non-uniformity in sample distribution might impact the reliability of conclusions drawn from the analysis, especially if frequencies with fewer samples have significant effects on the response variables.
 
 
 ```{r}
@@ -148,16 +150,16 @@ combined
 
 
 ```
-In order to see how stiffnessFrac and dampingFrac change over time for all foams, we plotted a scatter plot for each vs cycle. Dots of the same color were measured from the same foam sample. In the first plot, StiffnessFrac seems to spread out in an umbrella shape, showing that as cycle increases the sample values not only change, but get further apart. Cycle number looks like it has a relationship with stiffnessFrac, but that relationship looks different for each foam sample.
+In order to see how stiffnessFrac and dampingFrac change over time for all foams, we plotted a scatter plot for each vs cycle. The dot colors in @fig-2 represent which foam sample they were measured from. In the first plot, stiffnessFrac seems to spread out in an umbrella shape, showing that as cycle increases the sample values not only change, but get further apart. So cycle number has a relationship with stiffnessFrac, but that relationship looks different for each foam sample.
 
 In the second plot, there seems to be a general downward stretching of dampingFrac values as cycle increases, also showing us that as cycle increases sample values seem to spread out. So cycle number looks like it has a negative relationship with dampingFrac, but that relationship still looks different for each foam sample.
 
 The second plot was scaled so that the scale was from 0.75-1, given that all but 13 dampingFrac observations were in this range. The observations outside of this range (included in the unscaled third plot) all occurred in the interval code N, which is the last interval code we have in our filtered data, most likely meaning that these foams broke in some way or the experiment failed.
 
 ```{r}
-foam_data_interval_N <- foam_data_scaled[foam_data_scaled$intervalCode == "N", ]
+#foam_data_interval_N <- foam_data_scaled[foam_data_scaled$intervalCode == "N", ]
 
-ggplot(foam_data_interval_N, aes(y = stiffnessFrac, x = cycle)) + geom_point()
+#ggplot(foam_data_interval_N, aes(y = stiffnessFrac, x = cycle)) + geom_point()
 
 #foam_data_scaled$intervalCode == "N"
 
@@ -196,9 +198,9 @@ combined <- sp1 + dp1
 combined
 ```
 
-In @fig-3 above, we logged the responses, and plotted them against the log of cycle. The relationships between log(cycle) and the logged responses look more linear than the relationships in @fig-2.
+In @fig-3, we logged the responses, and plotted them against the log of cycle. The relationships between log(cycle) and the logged responses look more linear than the relationships in @fig-2.
 
-In order to understand how log(stiffnessFrac) and log(dampingFrac) behave over log(cycle) given different frequencies, we also colored the samples in the plots above by frequency. For log(stiffnessFrac), we see that higher frequencies have a more negative trend than lower frequencies. For log(dampingFrac), we see that lower frequencies have a more negative trend than higher frequencies. So frequency looks related to both stiffnessFrac and dampingFrac.
+In order to understand how log(stiffnessFrac) and log(dampingFrac) behave over log(cycle) given different frequencies, we also colored the samples in @fig-3 by frequency. For log(stiffnessFrac), we see that higher frequencies have a more negative trend than lower frequencies. For log(dampingFrac), we see that lower frequencies have a more negative trend than higher frequencies. So frequency looks related to both stiffnessFrac and dampingFrac.
 
 
 ```{r}
@@ -219,15 +221,15 @@ sfc2 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data$poro
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.325, 0.15)
 sfc3 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data$porosity == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
-  geom_point(color="blue", size=3) + 
+  geom_point(color="cyan2", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.325, 0.15)
 sfc4 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
-  geom_point(color="red", size=3) + 
+  geom_point(color="red3", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.325, 0.15)
 sfc5 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
-  geom_point(color="green", size=3) + 
+  geom_point(color="green4", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.325, 0.15)
 sfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
@@ -239,9 +241,9 @@ combined <- sfc1 + sfc2 + sfc3 + sfc4 + sfc5 + sfc6 + plot_layout(ncol = 3)
 combined
 ```
 
-These plots separate the log(stiffnessFrac) vs log(cycle) graph from above to show a better representation on how the interaction between chemical index and porosity impact stiffnessFrac. The top row shows only high porosity and the bottom row shows only low porosity samples. From left to right, the columns show chemical index 79, 100 and 121. We can see that the chemical index 79 has many samples where log(stiffnessFrac) trends upwards, whereas chemical indices 100 and 121 mostly trend downwards. This indicates a relationship between log(stiffnessFrac) and chemical index. Downward trends mean the stiffness decreases as cycle increases, which is not what we are looking for in a durable foam.
+The plots in @fig-4 separate the log(stiffnessFrac) vs log(cycle) graph from above to show how the interaction between chemical index and porosity impact log(stiffnessFrac). The top row shows only high porosity and the bottom row shows only low porosity samples. From left to right, the columns show chemical index 79, 100 and 121. We can see that the chemical index 79 has many samples where log(stiffnessFrac) trends upwards, whereas chemical indices 100 and 121 mostly trend downwards. This indicates a relationship between log(stiffnessFrac) and chemical index. Downward trends mean the stiffness decreases as cycle increases, which is not what we are looking for in a durable foam.
 
-We also see an effect from porosity. For chemical index 79, low porosity foam trends downward more often than high porosity foam, and for chemical index 100, low porosity foam trends upward more often than high porosity foam. So not only does porosity affect log(stiffnessFrac), but it effects it different ways for different porosities. This suggests a porosity:chemIndex interraction term would improve our model.
+We also see an effect from porosity. For chemical index 79, low porosity foam trends downward more often than high porosity foam, and for chemical index 100, low porosity foam trends upward more often than high porosity foam. So not only does porosity affect log(stiffnessFrac), but it effects it different ways for different porosities. This suggests that a porosity:chemIndex interaction term would improve our model.
 
 
 ```{r}
@@ -262,15 +264,15 @@ dfc2 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data_scal
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.175, 0.125)
 dfc3 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scaled$porosity == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
-  geom_point(color="blue", size=3) + 
+  geom_point(color="cyan2", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.175, 0.125)
 dfc4 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
-  geom_point(color="red", size=3) + 
+  geom_point(color="red3", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.175, 0.125)
 dfc5 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
-  geom_point(color="green", size=3) + 
+  geom_point(color="green4", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.175, 0.125)
 dfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
@@ -282,7 +284,7 @@ combined <- dfc1 + dfc2 + dfc3 + dfc4 + dfc5 + dfc6 + plot_layout(ncol = 3)
 combined
 ```
 
-These plots separate the log(dampingFrac) vs log(cycle) graph from above to show a better representation on how the interaction between chemical index and porosity impact dampingFrac. The data shown in the rows and columns are the same as in @fig-4. We can see differences in the log(dampingFrac) trends between different chemical indices, so there is likely a relationship present, but this relationship looks less pronounced than it was for the log(stiffnessFrac) trends.
+The plots in @fig-5 separate the log(dampingFrac) vs log(cycle) graph from above to show how the interaction between chemical index and porosity impact log(dampingFrac). The data shown in the rows and columns are the same as in @fig-4. We can see differences in the log(dampingFrac) trends between different chemical indices, so there is likely a relationship present, but this relationship looks less pronounced than it was for the log(stiffnessFrac) trends.
 
 Porosity also appears to have some effect. Trends in log(dampingFrac) for chemical index 121 are more similar to each other for low porosity than for high porosity, and trends in log(dampingFrac) for chemical index 79 are bit more similar to each other for high porosity than for low porosity. This suggests a porosity:chemIndex interaction term would improve our damping model, but this is still less clear than it was for stiffness.
 
