@@ -106,7 +106,9 @@ The formulas for stiffnessFrac and dampingFrac were specified by Foster. She bel
 
 We reformatted the data from wide to long to ensure each observation represents one measurement, not one foam sample. Measurements taken beyond 10,000 cycles were removed to maintain consistency across observations, and because Moira identified this as the most relevant time frame.
 
-There were a few concerning observations with negative values of stiffness, likely due to a fault in the measuring machine. At Foster’s instruction, we converted these negative stiffness values to positive. The transformed response dampingFrac also had five concerning observations, that were not just negative, but drastic outliers. These were changed to NA per Dr. Philtron's recommendation.
+There were a few concerning observations with negative values of stiffness, likely due to a fault in the measuring machine. At Foster’s instruction, we converted these negative stiffness values to positive. Then we made the transformed response variable stiffnessFrac, which reports each stiffness measurement divided by that foam sample's initial stiffness measurement.
+
+There were many observations will negative values of damping, but we were instructed to leave these as they were. Then we made the transformed response variable dampingFrac, which reports the tangent of each damping measurement divided by the tangent of that foam sample's initial damping measurement. DampingFrac had five data points that were drastic outliers, but these were changed to NA per Dr. Philtron's recommendation.
 
 Printed below are how many of each type of foam sample was tested:
 
@@ -457,11 +459,13 @@ One concern we have about our conclusions is that they were made based on relati
 
 This is especially true for foams with especially few samples, like low-porosity foam with chemical index 100. Our model estimates regarding foams like this are even more liable to be wrong. So our models are not equally strong with all 6 types of foam.
 
-Compounding this problem, other treatment levels like amplitude and initial stress were not used evenly in the experiment. For example, a few samples were compressed with abnormal amplitude. If this had an effect on those samples’ stiffness and damping, it could have a big impact on the coefficient estimates since there weren’t enough other samples to balance it out. It could be that amplitude or some other factor has a significant effect on stiffness and damping, but we could not assess that impact confidently because there were not enough observations at each treatment level. For this reason, a predictor that should have been included in the model could have been left out.
+Compounding this problem, other treatment levels were not used evenly in the experiment. As @fig-1 showed, fewer samples were tested at high frequencies. Our models' claims about the effects of high frequency should be taken with a grain of salt, because they are less reliable than its claims about low frequency. Additionally, if one variety of foam was never tested at high frequency, then the model's claims about that foam at high frequency are based on nothing, so should not be trusted at all. 
+
+Our models could have also been thrown off by conditions we didn't consider. For example, we didn't use amplitude in our models, but it could be that high amplitude has an impact on foam decay, and we simply could not detect it because so few samples were tested at high amplitude. Then there are unmeasured experimental conditions, like room temperature and how many other people were using the laboratory. Since these conditions were not controlled for, they could have had an effect we were unable to detect.
 
 Another consideration is that our models predict the log of stiffness fraction and the log of damping fraction linearly with the log of cycle number, which is a poor approximation in some cases. It is possible that models that are quadratic in log cycle number could have fit the data with slightly better accuracy, but these models would be harder to interpret. So our final models prioritize understanding the relationship between the responses and the predictors, possibly at the expense of accuracy.
 
-For future studies and more reliable models, we recommend testing more foam samples to increase the number of observations that can be used. The same number of each type of foam should be used, and treatments such as amplitude and initial stress should be assigned evenly. This ensures each treatment level is fully tested on each type of foam. We would also recommend regulating the temperature of the testing environment to help provide the best testing conditions. 
+For further studies, we recommend that more foam samples are tested, so that there are more observations to work with. The same number of each type of foam should be used, and the treatments such as amplitude and initial stress should be assigned evenly, so each treatment level is fully tested on each type of foam. This will allow for more trustworthy models.
 
 # Technical Appendix  
 
