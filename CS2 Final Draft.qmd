@@ -441,7 +441,7 @@ Compounding this problem, other treatment levels like amplitude and initial stre
 
 Another consideration is that our models predict the log of stiffness fraction and the log of damping fraction linearly with the log of cycle number, which is a poor approximation in some cases. It is possible that models that are quadratic in log cycle number could have fit the data with slightly better accuracy, but these models would be harder to interpret. So our final models prioritize understanding the relationship between the responses and the predictors, possibly at the expense of accuracy.
 
-For further and future studies, we recommend that more foam samples are tested, so that there are more observations to work with. The same number of each type of foam should be used, and the treatments such as amplitude and initial stress should be assigned evenly, so each treatment level is fully tested on each type of foam. This will allow for more trustworthy models.
+For future studies and more reliable models, we recommend testing more foam samples to increase the number of observations that can be used. The same number of each type of foam should be used, and treatments such as amplitude and initial stress should be assigned evenly. This ensures each treatment level is fully tested on each type of foam. We would also recommend regulating the temperature of the testing environment to help provide the best testing conditions. 
 
 # Technical Appendix  
 
