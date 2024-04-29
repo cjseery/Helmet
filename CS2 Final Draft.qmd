@@ -54,7 +54,7 @@ Foster’s objective is to understand what affects the changes in stiffness and 
 
 ## 1.2 Variables
 
-Explanatory Variables:
+**Explanatory Variables:**
 
 |    Variable Name    |                   Description                                 |
 |:--------------------|:---------------------------------------------------------------------------------------------|
@@ -67,16 +67,18 @@ Explanatory Variables:
 |    initialStress     |  the initial measure of the stress of the foam. (Originally labeled “stresskpa”)|
 |       cycle          |  the cycle number the measurement was taken at|
 
-Aside from cycle, all of these explanatory variables are constant across all measurements of an individual foam piece.
+*Caption: Table 1. Explanatory Variables*
 
-Response Variables:
+**Response Variables:**
 
 |    Variable Name    |                   Description                                       |
 |:--------------------|:---------------------------------------------------------------------------------------------|
 |     stiffness        |  measurement of the foam’s stiffness. (Originally labeled “E1_MPA”)|
 |      damping         |  measurement of the foam’s damping. (Originally labeled “delta_rad”)|
 |    stiffnessFrac     |  stiffness / first stiffness measurement|
-|     dampingFrac      |  tan(damping) / tan(first damping measurement)
+|     dampingFrac      |  tan(damping) / tan(first damping measurement)|
+
+*Caption: Table 2. Response Variables*
 
 The formulas for stiffnessFrac and dampingFrac were specified by Foster. She believed these would be more useful alternatives to studying raw stiffness and damping.
 
