@@ -61,16 +61,16 @@ Foster’s objective is to understand what affects the changes in stiffness and 
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline
-\text{Variable Name} & \text{Description} \\
+\textbf{Variable Name} & \textbf{Description} \\
 \hline
-ID & the unique identifier of the different foam pieces \\
-chemIndex & the chemical makeup type of the foam. 1 = 79, 2 = 100, 3 = 121 \\
-porosity & the porosity level of the foam. Low = 71\%, high = 81\% \\
-freq & the number of compressions per second (hz) \\
-amp & the amplitude of the compressions \\
-initialStrain & the initial measure of the strain of foam. (Originally labeled ``strain'') \\
-initialStress & the initial measure of the stress of the foam. (Originally labeled ``stresskpa'') \\
-cycle & the cycle number the measurement was taken at \\
+ID & The unique identifier of the different foam pieces \\
+chemIndex & The chemical makeup type of the foam. 1 = 79, 2 = 100, 3 = 121 \\
+porosity & The porosity level of the foam. Low = 71\%, high = 81\% \\
+freq & The number of compressions per second (hz) \\
+amp & The amplitude of the compressions \\
+initialStrain & The initial measure of the strain of foam. (Originally labeled ``strain'') \\
+initialStress & The initial measure of the stress of the foam. (Originally labeled ``stresskpa'') \\
+cycle & The cycle number the measurement was taken at \\
 \hline
 \end{tabular}
 \end{center}
@@ -86,11 +86,11 @@ cycle & the cycle number the measurement was taken at \\
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline
-\text{Variable Name} & \text{Description} \\
+\textbf{Variable Name} & \textbf{Description} \\
 \hline
-stiffness & measurement of the foam’s stiffness. (Originally labeled ``E1\_MPA'') \\
-damping & measurement of the foam’s damping. (Originally labeled ``delta\_rad'') \\
-stiffnessFrac & stiffness / first stiffness measurement \\
+stiffness & Measurement of the foam’s stiffness. (Originally labeled ``E1\_MPA'') \\
+damping & Measurement of the foam’s damping. (Originally labeled ``delta\_rad'') \\
+stiffnessFrac & Stiffness / first stiffness measurement \\
 dampingFrac & tan(damping) / tan(first damping measurement) \\
 \hline
 \end{tabular}
