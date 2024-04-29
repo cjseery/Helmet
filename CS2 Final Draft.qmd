@@ -314,11 +314,10 @@ In order to select our variables, we first started with a mixed model where all 
 
 To best predict the value of log(stiffness fraction), we used the following model:
 
-$\log(\text{stiffnessFrac}) = \alpha_0 + \alpha_1*I(\text{porosity} = \text{low})) + \alpha_2*I(\text{chemIndex} = 2)$\newline
-$+\alpha_3*I(\text{chemIndex} = 3)+\alpha_4*I(\text{chemIndex} = 2)*I(\text{porosity} = low)$\newline
-$+\alpha_5*I(\text{chemIndex} = 3)*I(\text{porosity} = low)+\beta_0*\log(\text{cycle}) +  \beta_1*\log(\text{cycle})*I(\text{porosity} = \text{low})$\newline
-$+\beta_2*\log(\text{cycle})*I(\text{chemIndex} = 2)+\beta_3*\log(\text{cycle})*I(\text{chemIndex} = 2)*I(\text{porosity} = \text{low})$\newline
-$+\beta_4*\log(\text{cycle})*I(\text{chemIndex} = 3)*I(\text{porosity} = \text{low})+ u_i + v_i*\log(\text{cycle}) + \epsilon_{ij}$
+Level 1: $\log(\text{stiffnessFrac}) = \alpha_i + \beta_i*log(cycle)$
+Level 2: $\alpha_i = \alpha_0 + \alpha_1*\text{porosity} + \alpha_2*\text{chemIndex} + \alpha_3*\text{freq} + \alpha_4*\text{amp}$
+         $\beta_i = \beta_0 + \beta_1*\text{porosity} + \beta_2*\text{chemIndex} +\beta_3*\text{freq} + \beta_4*\text{amp}$
+
 
 From the statistical summary below we see a high significance in our coefficients. The p-value for every term has a significance below five percent, meaning that there is a significant relationship between each of the terms and the response variable. The REML is also extremely low which leads us to conclude that this model fits the data very well and has minimal error. The coefficients not relating to cycle are impacting the initial stiffness of the foam at time zero. The variable that has the most positive impact on the initial stiffness is having a chemical index of 2. 
 
@@ -373,10 +372,9 @@ plot(re)
 
 To best predict the value of log(damping fraction), we used this model:
 
-$\log(\text{dampingFrac}) = \alpha_0 + \alpha_1*I(\text{porosity} = \text{low}) + \alpha_2*I(\text{chemIndex} = 2) + \alpha_3*I(\text{chemIndex} = 3)$\newline
-$+\alpha_4*\text{freq} + \beta_0*\log(\text{cycle}) + \beta_1*(I(\text{porosity} = \text{low})*\log(\text{cycle}))$\newline
-$+\beta_3*(I(\text{chemIndex} = 2)*\log(\text{cycle})) + \beta_4*(I(\text{chemIndex} = 3)*\log(\text{cycle}))$\newline
-$+\beta_5*(\text{freq}*\log(\text{cycle})) + u_i + v_i*\log(\text{cycle}) + \epsilon_{ij}$.
+Level 1: $\log(\text{dampingFrac}) = \alpha_i + \beta_i*log(cycle)$
+Level 2: $\alpha_i = \alpha_0 + \alpha_1*\text{porosity} + \alpha_2*\text{chemIndex} + \alpha_3*\text{freq}$
+         $\beta_i = \beta_0 + \beta_1*\text{porosity} + \beta_2*\text{chemIndex} +\beta_3*\text{freq}$
 
 The summary of this model shows a high significance in almost all of our coefficients through small p-values. The only value that does not show a significant p-value is frequency, however we chose to keep that in the model because of how significant the interaction between frequency and log(cycle) is. This model has multiple interactions: porosity and log(cycle), frequency and log(cycle), and chemical index and log(cycle). These interactions show that if all other variables are held constant, there is a combined effect of these interactions on the response variable. The REML is very negative, which shows that the model fits the data and there is minimal error. 
 
