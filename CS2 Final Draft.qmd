@@ -344,41 +344,16 @@ Level 2: $\alpha_i = \alpha_0 + \alpha_1*\text{porosity} + \alpha_2*\text{chemIn
 From the statistical summary below we see a high significance in our coefficients. The p-value for every term has a significance below five percent, meaning that there is a significant relationship between each of the terms and the response variable. The REML is also extremely low which leads us to conclude that this model fits the data very well and has minimal error. The coefficients not relating to cycle are impacting the initial stiffness of the foam at time zero. The variable that has the most positive impact on the initial stiffness is having a chemical index of 2. 
 
 ```{r, echo = FALSE}
-summary(FactorModel)
+Anova(FactorModel)
 ```
 
 We also assessed the model to see how it met the conditions of a predictive model. From @fig-6, we see that there appears to be some sinusoidal behavior at the beginning and the middle of the shape has a larger range than the rest of the plot. Since the range of the plot is so small, we can conclude that the equal variance condition is being met. We also do not see any flaring or nonlinear movement so the linearity condition is also being met. The QQ plot in #fig-7 shows some tailing on the ends but nothing too concerning. This concludes that all conditions are being met so this model is valid for the purpose of prediction.
-
-```{r, echo = FALSE}
-#| echo: false
-#| label: fig-6
-#| warning: false
-#| fig-cap: "Residual Plot of Stiffness Fraction Model"
-#| fig-align: "center"
-#| fig-width: 7
-#| fig-height: 4
-
-plot(FactorModel)
-```
-
-```{r, echo = FALSE}
-#| echo: false
-#| label: fig-7
-#| warning: false
-#| fig-cap: "QQ Plot of Stiffness Fraction Model"
-#| fig-align: "center"
-#| fig-width: 7
-#| fig-height: 4
-
-qqnorm(resid(FactorModel))
-qqline(resid(FactorModel))
-```
 
 Lastly, given that we are using a mixed effects model, it is necessary to explore the random effects associated with the model. From @fig-8, we notice that as the intercept increases, the slope decreases. This is a very defined trend and supports our conclusion that a mixed model should be used. We would expect to see that each of the foams starts at a similar stiffness fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
 
 ```{r, echo = FALSE}
 #| echo: false
-#| label: fig-8
+#| label: fig-6
 #| warning: false
 #| fig-cap: "Intercept Rand Effects vs. Slope Rand Effects"
 #| fig-align: "center"
@@ -398,43 +373,19 @@ Level 1: $\log(\text{dampingFrac}) = \alpha_i + \beta_i*log(cycle)$
 Level 2: $\alpha_i = \alpha_0 + \alpha_1*\text{porosity} + \alpha_2*\text{chemIndex} + \alpha_3*\text{freq}$
          $\beta_i = \beta_0 + \beta_1*\text{porosity} + \beta_2*\text{chemIndex} +\beta_3*\text{freq}$
 
-The summary of this model shows a high significance in almost all of our coefficients through small p-values. The only value that does not show a significant p-value is frequency, however we chose to keep that in the model because of how significant the interaction between frequency and log(cycle) is. This model has multiple interactions: porosity and log(cycle), frequency and log(cycle), and chemical index and log(cycle). These interactions show that if all other variables are held constant, there is a combined effect of these interactions on the response variable. The REML is very negative, which shows that the model fits the data and there is minimal error. 
+The summary of this model shows a high significance in almost all of our coefficients through small p-values. The only value that does not show a significant p-value is chemIndex, however we chose to keep that in the model because of how significant the interaction between chemIndex and log(cycle) is. This model has multiple interactions: porosity and log(cycle), frequency and log(cycle), and chemical index and log(cycle). These interactions show that if all other variables are held constant, there is a combined effect of these interactions on the response variable.  
 
 ```{r, echo = FALSE}
-summary(dampingModel)
+Anova(dampingModel)
 ```
 
-From the diagnostic plots, we first look at the residuals vs fitted plot in @fig-9. From this plot we can see that there is a mostly linear trend with only a few straggling points throughout. The linearity condition is met since there is no major trend to contradict it. Also, the equal variance condition is met since there are only a couple of points that have concerningly high residuals. In the normal Q-Q plot in @fig-10, there is some tailing at both ends, but nothing to cause extreme concern so the normality condition is met. Since all three conditions are met, this model is valid for the purpose of prediction. 
+We used a residuals vs fitted plot and QQ plot to assess the conditions of our model. We found that this damping model meets all of these conditions which therefore we can analyze our model's results. 
+
+Lastly, we must look at the random effects of our model in @fig-7. Like the stiffness model, as the intercept increases, the slope decreases. Although the trend is not as linear as the stiffness model, it still supports our conclusion that a mixed model should be used. Again, we would expect to see that each of the foams starts at a similar damping fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
 
 ```{r, echo = FALSE}
 #| echo: false
-#| label: fig-9
-#| warning: false
-#| fig-cap: "Residual Plot of Damping Fraction Model"
-#| fig-align: "center"
-#| fig-width: 7
-#| fig-height: 4
-
-plot(dampingModel)
-```
-
-```{r, echo = FALSE}
-#| echo: false
-#| label: fig-10
-#| warning: false
-#| fig-cap: "QQ Plot of Damping Fraction Model"
-#| fig-align: "center"
-#| fig-width: 7
-#| fig-height: 4
-qqnorm(resid(dampingModel))
-qqline(resid(dampingModel))
-```
-
-Lastly, we must look at the random effects of our model in @fig-11. Like the stiffness model, as the intercept increases, the slope decreases. Although the trend is not as linear as the stiffness model, it still supports our conclusion that a mixed model should be used. Again, we would expect to see that each of the foams starts at a similar damping fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
-
-```{r, echo = FALSE}
-#| echo: false
-#| label: fig-11
+#| label: fig-7
 #| warning: false
 #| fig-cap: "Intercept Rand Effects vs. Slope Rand Effects"
 #| fig-align: "center"
@@ -485,6 +436,131 @@ dampingModel <- lmer(log(dampingFrac) ~ porosity + factor(chemIndex) + freq + lo
 # Convert intervalCode to a factor with specified levels
 foam_data_scaled$intervalCode <- factor(foam_data_scaled$intervalCode, levels = c("A", "B", "C", "D","E", "F", "G", "H","I", "J", "K", "L","M", "N"))
 
+# EDA code
+
+# graph1
+foam_Samples <- foam_data[ ,c("ID", "chemIndex", "porosity", "freq", "amp", "initialStrain", "initialStress")]
+foam_Samples <- unique(foam_Samples)
+
+ggplot(foam_Samples, aes(x=freq)) +
+  geom_histogram(bins=10)
+
+# graph2
+p1 <- ggplot(foam_data_scaled, aes(y = stiffnessFrac, x = cycle, col=factor(ID))) +
+  geom_point() + 
+  theme(legend.position="none")
+
+p2 <- ggplot(foam_data_scaled, aes(y = dampingFrac, x = cycle, col=factor(ID))) + 
+  geom_point() +
+  theme(legend.position="none")
+
+combined <- p1 + p2
+
+combined
+
+# graph3
+sp1 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = freq))
+#sp2 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
+#sp3 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = porosity))
+
+#combined <- sp1 + sp2 + sp3
+
+#combined
+
+dp1 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = freq))
+#dp2 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
+#dp3 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = porosity))
+
+#combined <- dp1 + dp2 + dp3
+
+#combined
+
+combined <- sp1 + dp1
+combined
+
+# graph4
+sfc1 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data$porosity == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(color="red", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15) +
+  labs(title="ChemIndex 79, Porisity 81") +
+  theme(plot.title = element_text(size=25))
+sfc2 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data$porosity == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(color="green", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15) +
+  labs(title="ChemIndex 100, Porisity 81") +
+  theme(plot.title = element_text(size=25))
+sfc3 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data$porosity == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(color="cyan2", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15) +
+  labs(title="ChemIndex 121, Porisity 81") +
+  theme(plot.title = element_text(size=25))
+sfc4 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(color="red3", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15) +
+  labs(title="ChemIndex 79, Porisity 71") +
+  theme(plot.title = element_text(size=25))
+sfc5 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(color="green4", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15) +
+  labs(title="ChemIndex 100, Porisity 71") +
+  theme(plot.title = element_text(size=25))
+sfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+  geom_point(col="blue", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.325, 0.15) +
+  labs(title="ChemIndex 121, Porisity 71") +
+  theme(plot.title = element_text(size=25))
+
+combined <- sfc1 + sfc2 + sfc3 + sfc4 + sfc5 + sfc6 + plot_layout(ncol = 3)
+combined
+
+# graph5
+dfc1 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data_scaled$porosity == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
+  geom_point(color="red", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125) +
+  labs(title="ChemIndex 79, Porisity 81") +
+  theme(plot.title = element_text(size=25))
+dfc2 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data_scaled$porosity == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
+  geom_point(color="green", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125) +
+  labs(title="ChemIndex 100, Porisity 81") +
+  theme(plot.title = element_text(size=25))
+dfc3 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scaled$porosity == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
+  geom_point(color="cyan2", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125) +
+  labs(title="ChemIndex 121, Porisity 81") +
+  theme(plot.title = element_text(size=25))
+dfc4 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
+  geom_point(color="red3", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125) +
+  labs(title="ChemIndex 79, Porisity 71") +
+  theme(plot.title = element_text(size=25))
+dfc5 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
+  geom_point(color="green4", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125) +
+  labs(title="ChemIndex 100, Porisity 71") +
+  theme(plot.title = element_text(size=25))
+dfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
+  geom_point(col="blue", size=3) + 
+  geom_hline(yintercept = 0, linetype="dashed") +
+  ylim(-0.175, 0.125) +
+  labs(title="ChemIndex 121, Porisity 71") +
+  theme(plot.title = element_text(size=25))
+
+combined <- dfc1 + dfc2 + dfc3 + dfc4 + dfc5 + dfc6 + plot_layout(ncol = 3)
+combined
+
+
 # summary of stiffnessFrac model 
 summary(FactorModel)
 
@@ -512,6 +588,14 @@ re <- ranef(dampingModel)$ID
 plot(re)
 ```
 
+```{r, include=TRUE}
+foam_Samples <- foam_data[ ,c("ID", "chemIndex", "porosity", "freq", "amp", "initialStrain", "initialStress")]
+foam_Samples <- unique(foam_Samples)
+
+count(foam_Samples, chemIndex)
+count(foam_Samples, porosity)
+count(foam_Samples, chemIndex, porosity)
+```
 
 ```{r}
 #| echo: false
@@ -540,13 +624,51 @@ regfit.full <- regsubsets(log(dampingFrac) ~ chemIndex + porosity + freq + amp +
 plot(regfit.full, scale = "bic")
 ```
 
-@fig-example1 and @fig-example2 show the plots that we used to pick our predictors for our model. Since our main concerns for this analysis were with chemIndex and porosity, we chose the predictors with the highest bic starting at where those two predictors became significant. With stiffnessFrac this was at bic = -640 and with dampingFrac this was at -520. 
+```{r, echo = FALSE}
+#| echo: false
+#| label: fig-example3
+#| warning: false
+#| fig-cap: "Residual Plot of Stiffness Fraction Model"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
 
-```{r, include=TRUE}
-foam_Samples <- foam_data[ ,c("ID", "chemIndex", "porosity", "freq", "amp", "initialStrain", "initialStress")]
-foam_Samples <- unique(foam_Samples)
+plot(FactorModel)
+```
 
-count(foam_Samples, chemIndex)
-count(foam_Samples, porosity)
-count(foam_Samples, chemIndex, porosity)
+```{r, echo = FALSE}
+#| echo: false
+#| label: fig-example4
+#| warning: false
+#| fig-cap: "QQ Plot of Stiffness Fraction Model"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
+
+qqnorm(resid(FactorModel))
+qqline(resid(FactorModel))
+```
+
+```{r, echo = FALSE}
+#| echo: false
+#| label: fig-example5
+#| warning: false
+#| fig-cap: "Residual Plot of Damping Fraction Model"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
+
+plot(dampingModel)
+```
+
+```{r, echo = FALSE}
+#| echo: false
+#| label: fig-example6
+#| warning: false
+#| fig-cap: "QQ Plot of Damping Fraction Model"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
+qqnorm(resid(dampingModel))
+qqline(resid(dampingModel))
 ```
