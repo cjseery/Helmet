@@ -324,21 +324,22 @@ In order to select our variables, we first started with a mixed model where all 
 
 |    Stiffness Model Predictors    |        Damping Model Predictors                     
 |:---------------------------------|:------------------------------------|
-            porosity               |             porosity
            chemIndex               |             chemIndex
-           log(cycle)              |               freq
-       porosity:chemIndex          |             log(cycle)
-       chemIndex:log(cycle)        |          porosity:log(cycle)
-       porosity:log(cycle)         |         chemIndex:log(cycle)
-  porosity:chemIndex:log(cycle)    |            freq:log(cycle)
+             freq                  |               freq
+          log(cycle)               |            log(cycle)
+              amp                  |             porosity
+       chemIndex:log(cycle)        |         chemIndex:log(cycle)
+        freq:log(cycle)            |           freq:log(cycle)
+        amp:log(cycle)             |         porosity:log(cycle)
+            
    
 # 3.1 Stiffness
 
 To best predict the value of log(stiffness fraction), we used the following model:
 
 Level 1: $\log(\text{stiffnessFrac}) = \alpha_i + \beta_i*log(cycle)$
-Level 2: $\alpha_i = \alpha_0 + \alpha_1*\text{porosity} + \alpha_2*\text{chemIndex} + \alpha_3*\text{freq} + \alpha_4*\text{amp}$
-         $\beta_i = \beta_0 + \beta_1*\text{porosity} + \beta_2*\text{chemIndex} +\beta_3*\text{freq} + \beta_4*\text{amp}$
+Level 2: $\alpha_i = \alpha_0 + \alpha_1*\text{chemIndex} + \alpha_2*\text{freq} + \alpha_3*\text{amp}$
+         $\beta_i = \beta_0 + \beta_1*\text{chemIndex} +\beta_2*\text{freq} + \beta_3*\text{amp}$
 
 
 From the statistical summary below we see a high significance in our coefficients. The p-value for every term has a significance below five percent, meaning that there is a significant relationship between each of the terms and the response variable. The REML is also extremely low which leads us to conclude that this model fits the data very well and has minimal error. The coefficients not relating to cycle are impacting the initial stiffness of the foam at time zero. The variable that has the most positive impact on the initial stiffness is having a chemical index of 2. 
