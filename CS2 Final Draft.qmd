@@ -1,7 +1,7 @@
 ---
 title: "Helmet Foam Case Study Report"
 author: 'Katie Greene, Ava Harman, Chris Seery, Ian Stonecypher'
-date: 'April, 2024'
+date: 'May, 2024'
 format: pdf
 ---
 
@@ -104,11 +104,11 @@ The formulas for stiffnessFrac and dampingFrac were specified by Foster. She bel
 
 #  2. Exploratory Data Analysis (EDA)
 
-We reformatted the data from wide to long to ensure each observation represents one measurement, not one foam sample. Measurements taken beyond 10,000 cycles were removed to maintain consistency across observations, and because Moira identified this as the most relevant time frame.
+We reformatted the data from wide to long to ensure each observation represented one measurement, not one foam sample. Measurements taken beyond 10,000 cycles were removed to maintain consistency across observations, and because Moira identified this as the most relevant time frame.
 
 There were a few concerning observations with negative values of stiffness, likely due to a fault in the measuring machine. At Foster’s instruction, we converted these negative stiffness values to positive. Then we made the transformed response variable stiffnessFrac, which reports each stiffness measurement divided by that foam sample's initial stiffness measurement.
 
-There were many observations will negative values of damping, but we were instructed to leave these as they were. Then we made the transformed response variable dampingFrac, which reports the tangent of each damping measurement divided by the tangent of that foam sample's initial damping measurement. DampingFrac had five data points that were drastic outliers, but these were changed to NA per Dr. Philtron's recommendation.
+There were many observations with negative values of damping, but we were instructed to leave these as they were. Then we made the transformed response variable dampingFrac, which reports the tangent of each damping measurement divided by the tangent of that foam sample's initial damping measurement. DampingFrac had five data points that were drastic outliers, but these were changed to NA per Dr. Philtron's recommendation.
 
 Printed below are how many of each type of foam sample was tested:
 
@@ -135,7 +135,7 @@ ggplot(foam_Samples, aes(x=freq)) +
   geom_histogram(bins=10)
 ```
 
-The histogram in @fig-1 shows the distribution of compression frequencies among the foam samples. The uneven distribution suggests that certain compression frequencies were tested more frequently than others. This non-uniformity in sample distribution might impact the reliability of conclusions drawn from the analysis, especially if frequencies with fewer samples have significant effects on the response variables.
+The histogram in @fig-1 shows the distribution of compression frequencies among the foam samples revealing that certain compression frequencies were tested more frequently than others. These non-uniformities in sample distribution might impact the reliability of conclusions drawn from the analysis.
 
 
 ```{r}
@@ -160,8 +160,6 @@ combined <- p1 + p2
 combined
 ```
 In order to see how stiffnessFrac and dampingFrac change over time for all foams, we plotted a scatter plot for each vs cycle. The dot colors in @fig-2 represent which foam sample they were measured from. As cycle number increases, the stiffnessFrac and dampingFrac values not only change, but spread further apart. So stiffnessFrac and dampingFrac both appear to have a relationship with cycle, but that relationship looks different for each foam sample.
-
-In the second plot, there seems to be a general downward stretching of dampingFrac values as cycle increases, also showing us that as cycle increases sample values seem to spread out. So cycle number looks like it has a negative relationship with dampingFrac, but that relationship still looks different for each foam sample.
 
 ```{r}
 #foam_data_interval_N <- foam_data_scaled[foam_data_scaled$intervalCode == "N", ]
@@ -337,9 +335,11 @@ In order to select our variables, we first started with a mixed model where all 
 
 To best predict the value of log(stiffness fraction), we used the following model:
 
-Level 1: $\log(\text{stiffnessFrac}) = \alpha_i + \beta_i*log(cycle)$
-Level 2: $\alpha_i = \alpha_0 + \alpha_1*\text{chemIndex} + \alpha_2*\text{freq} + \alpha_3*\text{amp}$
-         $\beta_i = \beta_0 + \beta_1*\text{chemIndex} +\beta_2*\text{freq} + \beta_3*\text{amp}$
+**Level 1**: $\log(\text{stiffnessFrac}) = \alpha_i + \beta_i*log(cycle)$
+
+**Level 2**: $\alpha_i = \alpha_0 + \alpha_1*\text{chemIndex} + \alpha_2*\text{freq} + \alpha_3*\text{amp}$
+
+$\beta_i = \beta_0 + \beta_1*\text{chemIndex} +\beta_2*\text{freq} + \beta_3*\text{amp}$
 
 
 From the statistical summary below we see a high significance in our coefficients. The p-value for every term has a significance below five percent, meaning that there is a significant relationship between each of the terms and the response variable. The REML is also extremely low which leads us to conclude that this model fits the data very well and has minimal error. The coefficients not relating to cycle are impacting the initial stiffness of the foam at time zero. The variable that has the most positive impact on the initial stiffness is having a chemical index of 2. 
@@ -348,9 +348,9 @@ From the statistical summary below we see a high significance in our coefficient
 Anova(FactorModel)
 ```
 
-We also assessed the model to see how it met the conditions of a predictive model. From @fig-6, we see that there appears to be some sinusoidal behavior at the beginning and the middle of the shape has a larger range than the rest of the plot. Since the range of the plot is so small, we can conclude that the equal variance condition is being met. We also do not see any flaring or nonlinear movement so the linearity condition is also being met. The QQ plot in #fig-7 shows some tailing on the ends but nothing too concerning. This concludes that all conditions are being met so this model is valid for the purpose of prediction.
+We also assessed the model to see how it met the conditions of a predictive model. From @fig-example3 (see Appendix), we see that there appears to be some sinusoidal behavior at the beginning and the middle of the shape has a larger range than the rest of the plot. Since the range of the plot is so small, we can conclude that the equal variance condition is being met. We also do not see any flaring or nonlinear movement so the linearity condition is also being met. The QQ plot in @fig-example4 (see Appendix) shows some tailing on the ends but nothing too concerning. This concludes that all conditions are being met so this model is valid for the purpose of prediction.
 
-Lastly, given that we are using a mixed effects model, it is necessary to explore the random effects associated with the model. From @fig-8, we notice that as the intercept increases, the slope decreases. This is a very defined trend and supports our conclusion that a mixed model should be used. We would expect to see that each of the foams starts at a similar stiffness fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
+Lastly, given that we are using a mixed effects model, it is necessary to explore the random effects associated with the model. From @fig-6, we notice that as the intercept increases, the slope decreases. This is a very defined trend and supports our conclusion that a mixed model should be used. We would expect to see that each of the foams starts at a similar stiffness fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
 
 ```{r, echo = FALSE}
 #| echo: false
@@ -370,17 +370,19 @@ plot(re)
 
 To best predict the value of log(damping fraction), we used this model:
 
-Level 1: $\log(\text{dampingFrac}) = \alpha_i + \beta_i*log(cycle)$
-Level 2: $\alpha_i = \alpha_0 + \alpha_1*\text{porosity} + \alpha_2*\text{chemIndex} + \alpha_3*\text{freq}$
-         $\beta_i = \beta_0 + \beta_1*\text{porosity} + \beta_2*\text{chemIndex} +\beta_3*\text{freq}$
+**Level 1**: $\log(\text{dampingFrac}) = \alpha_i + \beta_i*log(cycle)$
 
-The summary of this model shows a high significance in almost all of our coefficients through small p-values (less than 0.05). These small p-values suggest that these variables are significant predictors of our response variable. The only value that does not show a significant p-value is chemIndex, however we chose to keep that in the model because of how significant the interaction between chemIndex and log(cycle) is. This model has multiple interactions: porosity and log(cycle), frequency and log(cycle), and chemical index and log(cycle). These interactions show that if all other variables are held constant, there is a combined effect of these interactions on the response variable. 
+**Level 2**: $\alpha_i = \alpha_0 + \alpha_1*\text{porosity} + \alpha_2*\text{chemIndex} + \alpha_3*\text{freq}$
+
+$\beta_i = \beta_0 + \beta_1*\text{porosity} + \beta_2*\text{chemIndex} +\beta_3*\text{freq}$
+
+The summary of this model shows a high significance in almost all of our coefficients through small p-values (less than 0.05). These small p-values suggest that these variables are significant predictors of our response variable. The only value that does not show a significant p-value is chemIndex, which we chose to keep because the interaction between chemIndex and log(cycle) is significant. This model has multiple interactions: porosity and log(cycle), frequency and log(cycle), and chemical index and log(cycle). These interactions show that if all other variables are held constant, there is a combined effect of these interactions on the response variable. 
 
 ```{r, echo = FALSE}
 Anova(dampingModel)
 ```
 
-We used a residuals vs fitted plot and QQ plot to assess the conditions of our model. We found that this damping model meets all of these conditions which therefore we can analyze our model's results. 
+We used a residuals vs fitted plot and QQ plot to assess the conditions of our model (see @fig-example5 and @fig-example6, in the Appendix). We found that this damping model meets all of these conditions which therefore we can analyze our model's results. 
 
 Lastly, we must look at the random effects of our model in @fig-7. Like the stiffness model, as the intercept increases, the slope decreases. Although the trend is not as linear as the stiffness model, it still supports our conclusion that a mixed model should be used. Again, we would expect to see that each of the foams starts at a similar damping fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
 
@@ -407,17 +409,15 @@ plot(re)
 
 # 5. Additional Considerations
 
-One concern we have about our conclusions is that they were made based on relatively few observations. Our model for stiffness fraction, for example, consists of six possible trendlines, based on a foam’s porosity and chemical index, and most combinations of porosity and chemical index had fewer than ten foam samples in this experiment. We can confidently say that the coefficient estimates in both our models are non-zero, but the estimates could still be off from their true values. We would need more observations to get a more reliable estimate of the true coefficients. 
+One concern we have about our conclusions is that they were made based on relatively few observations. Our model for stiffness fraction, for example, depends on chemical index, frequency, and amplitude, and only 12 samples with chemical index 100 were tested. There are too many possible combinations of frequency and amplitude to be explored thoroughly with just 12 samples. In cases like this, our models' coefficient estimates are based on very little information. The p-values gave us confidence that the coefficients were not zero, but our estimates could still be far off from their true values. We would need more observations to get a more reliable estimate of the true coefficients.
 
-This is especially true for foams with especially few samples, like low-porosity foam with chemical index 100. Our model estimates regarding foams like this are even more liable to be wrong. So our models are not equally strong with all 6 types of foam.
+A similar concern comes from foam types and testing conditions that were used less often, such as high frequency. The reliability of our models is already limited, and for these cases they are even less reliable. Additionally, if one variety of foam was never tested at high frequency, then the model's claims about that foam at high frequency are based on nothing, and should not be trusted at all. So not all information this model gives on what effects stiffness and damping in foam is equally trustworthy. 
 
-Compounding this problem, other treatment levels were not used evenly in the experiment. As @fig-1 showed, fewer samples were tested at high frequencies. Our models' claims about the effects of high frequency should be taken with a grain of salt, because they are less reliable than its claims about low frequency. Additionally, if one variety of foam was never tested at high frequency, then the model's claims about that foam at high frequency are based on nothing, so should not be trusted at all. 
-
-Our models could have also been thrown off by conditions we didn't consider. For example, we didn't use amplitude in our models, but it could be that high amplitude has an impact on foam decay, and we simply could not detect it because so few samples were tested at high amplitude. Then there are unmeasured experimental conditions, like room temperature and how many other people were using the laboratory. Since these conditions were not controlled for, they could have had an effect we were unable to detect.
+Our models could have also been thrown off by conditions we didn't consider, such as room temperature and how many other people were using the laboratory. Since these conditions were not controlled for, they could have had an effect we were unable to detect.
 
 Another consideration is that our models predict the log of stiffness fraction and the log of damping fraction linearly with the log of cycle number, which is a poor approximation in some cases. It is possible that models that are quadratic in log cycle number could have fit the data with slightly better accuracy, but these models would be harder to interpret. So our final models prioritize understanding the relationship between the responses and the predictors, possibly at the expense of accuracy.
 
-For further studies, we recommend that more foam samples are tested, so that there are more observations to work with. The same number of each type of foam should be used, and the treatments such as amplitude and initial stress should be assigned evenly, so each treatment level is fully tested on each type of foam. This will allow for more trustworthy models.
+For further studies, we recommend that more foam samples are tested, so that there are more observations to work with. The same number of each type of foam should be used, and the treatments such as amplitude and initial stress should be assigned evenly and randomly, so each treatment level is fully tested on each type of foam. This will allow for more trustworthy models.
 
 # Technical Appendix  
 
