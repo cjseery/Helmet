@@ -117,6 +117,10 @@ Printed below are how many of each type of foam sample was tested:
 | **81**   | 9                | 7                 | 6                 |
 | **71**   | 11               | 5                 | 8                 |
 
+\begin{center}
+\text{Table 3: Foam Sample Type Counts}
+\end{center}
+
 These counts show that a relatively small number of each type of foam were tested. The amounts are unequal as well, ranging from 5 to 11.
 
 ```{r}
@@ -159,7 +163,7 @@ combined <- p1 + p2
 
 combined
 ```
-In order to see how stiffnessFrac and dampingFrac change over time for all foams, we plotted a scatter plot for each vs cycle. The dot colors in @fig-2 represent which foam sample they were measured from. As cycle number increases, the stiffnessFrac and dampingFrac values not only change, but spread further apart. So stiffnessFrac and dampingFrac both appear to have a relationship with cycle, but that relationship looks different for each foam sample.
+In order to see how stiffnessFrac and dampingFrac change over time for all foams, we plotted a scatter plot for each vs cycle. The dot colors in @fig-2 represent which foam sample they were measured from. As cycle number increases, the stiffnessFrac and dampingFrac values not only change, but spread further apart. StiffnessFrac and dampingFrac both appear to have a relationship with cycle, but that relationship looks different for each foam sample.
 
 ```{r}
 #foam_data_interval_N <- foam_data_scaled[foam_data_scaled$intervalCode == "N", ]
@@ -174,7 +178,7 @@ In order to see how stiffnessFrac and dampingFrac change over time for all foams
 #| echo: false
 #| label: fig-3
 #| warning: false
-#| fig-cap: "log(stiffnessFrac) vs log(cycle) by freq, and log(dampingFrac) vs log(cycle) by freq"
+#| fig-cap: "Log(stiffnessFrac) vs Log(cycle) and Log(dampingFrac) vs Log(cycle), Colored by Freq"
 #| fig-align: "center"
 #| fig-width: 10
 #| fig-height: 5
@@ -201,14 +205,14 @@ combined
 
 In @fig-3, we logged the responses, and plotted them against the log of cycle. The relationships between log(cycle) and the logged responses look more linear than the relationships in @fig-2, so a linear model using these logged variables would fit better.
 
-In order to understand how log(stiffnessFrac) and log(dampingFrac) behave given different frequencies, we also colored the samples in @fig-3 by frequency. For log(stiffnessFrac), we see that higher frequencies have a more negative trend than lower frequencies. For log(dampingFrac), we see that lower frequencies have a more negative trend than higher frequencies. So frequency looks related to both stiffnessFrac and dampingFrac.
+In order to understand how log(stiffnessFrac) and log(dampingFrac) behave given different frequencies, we also colored the samples in @fig-3 by frequency. For log(stiffnessFrac), we see that higher frequencies have a more negative trend than lower frequencies. For log(dampingFrac), we see that lower frequencies have a more negative trend than higher frequencies. Frequency looks related to both stiffnessFrac and dampingFrac.
 
 
 ```{r}
 #| echo: false
 #| label: fig-4
 #| warning: false
-#| fig-cap: "log(stiffnessFrac) vs log(cycle) by chemIndex and porosity"
+#| fig-cap: "Log(stiffnessFrac) vs Log(cycle), Separated by ChemIndex and Porosity"
 #| fig-align: "center"
 #| fig-width: 18
 #| fig-height: 8
@@ -263,7 +267,7 @@ We also see an effect from porosity. For chemical index 79, low porosity foam tr
 #| echo: false
 #| label: fig-5
 #| warning: false
-#| fig-cap: "log(dampingFrac) vs log(cycle) for chemIndex and porosity"
+#| fig-cap: "Log(dampingFrac) vs Log(cycle), Separated by ChemIndex and Porosity"
 #| fig-align: "center"
 #| fig-width: 18
 #| fig-height: 8
@@ -329,6 +333,10 @@ In order to select our variables, we first started with a mixed model where all 
        chemIndex:log(cycle)        |         chemIndex:log(cycle)
         freq:log(cycle)            |           freq:log(cycle)
         amp:log(cycle)             |         porosity:log(cycle)
+        
+\begin{center}
+\text{Table 4: Predictors Selected For Each Model}
+\end{center}
             
    
 # 3.1 Stiffness
@@ -419,29 +427,323 @@ Another consideration is that our models predict the log of stiffness fraction a
 
 For further studies, we recommend that more foam samples are tested, so that there are more observations to work with. The same number of each type of foam should be used, and the treatments such as amplitude and initial stress should be assigned evenly and randomly, so each treatment level is fully tested on each type of foam. This will allow for more trustworthy models.
 
-# Technical Appendix  
+# Technical Appendix
 
-### R Script
-```{r ref.label=c('front-matter', 'fig-example1','tbl-summarystats', 'fig-example2')}
+### Data Wrangling
+
+```{r}
 #| echo: true
 #| eval: false
+knitr::opts_chunk$set(echo = TRUE)
+
+library(patchwork)
+library("readxl")
+library(ggplot2)
+library(tidyverse)
+
+foamDataRaw <- read_excel("DMA_Fatigue_Data_from_Team_Wendy_Polyurethane
+                          _LLNL-MI-860456.xlsx")
+names(foamDataRaw) <- foamDataRaw[3,]
+foamDataRaw <- foamDataRaw[-c(1:3),] # remove rows without data
+foamDataRaw <- foamDataRaw[,-c(62:64)] # remove duplicate columns
+
+foamDataIntermediate <- foamDataRaw |>
+  separate(col=SampleCode, into=c("Chemical", "chemIndex", "porosity", "ID")) |>
+  select(!Chemical) |>
+  mutate_at(vars(chemIndex), as.character) |>
+  mutate_at(vars(porosity), as.character) |>
+  mutate(chemIndex = dplyr::recode(chemIndex, "79"="1", "100"="2", "121"="3")) |>
+  mutate(porosity = dplyr::recode(porosity, "71"="low", "81"="high")) |>
+  rename("initialStrain"="strain") |>
+  rename("initialStress"="stresskpa") |>
+  mutate_at(c("Cyc_A", "Cyc_B", "Cyc_C", "Cyc_D", "Cyc_E", "Cyc_F", "Cyc_G", "Cyc_H", "Cyc_I", 
+              "Cyc_J", "Cyc_K", "Cyc_L", "Cyc_M", "Cyc_N", "E1_MPA_Cyc_A", "E1_MPA_Cyc_B", 
+              "E1_MPA_Cyc_C", "E1_MPA_Cyc_D", "E1_MPA_Cyc_E", "E1_MPA_Cyc_F", "E1_MPA_Cyc_G", 
+              "E1_MPA_Cyc_H", "E1_MPA_Cyc_I", "E1_MPA_Cyc_J", "E1_MPA_Cyc_K", "E1_MPA_Cyc_L", 
+              "E1_MPA_Cyc_M", "E1_MPA_Cyc_N", "delta_rad_Cyc_A", "delta_rad_Cyc_B", 
+              "delta_rad_Cyc_C", "delta_rad_Cyc_D", "delta_rad_Cyc_E", "delta_rad_Cyc_F", 
+              "delta_rad_Cyc_G", "delta_rad_Cyc_H", "delta_rad_Cyc_I", "delta_rad_Cyc_J", 
+              "delta_rad_Cyc_K", "delta_rad_Cyc_L", "delta_rad_Cyc_M", "delta_rad_Cyc_N"), 
+            as.numeric) |>
+  mutate_at(c("E1_MPA_Cyc_A", "E1_MPA_Cyc_B", "E1_MPA_Cyc_C", "E1_MPA_Cyc_D", "E1_MPA_Cyc_E", 
+              "E1_MPA_Cyc_F", "E1_MPA_Cyc_G", "E1_MPA_Cyc_H", "E1_MPA_Cyc_I", "E1_MPA_Cyc_J", 
+              "E1_MPA_Cyc_K", "E1_MPA_Cyc_L", "E1_MPA_Cyc_M", "E1_MPA_Cyc_N"), abs)
+
+#These lines add columns for Rate Of Change of stiffness and damping.
+foamDataIntermediate <- foamDataIntermediate |>
+  mutate(stiffness_ROC_A = NA) |>
+  mutate(stiffness_ROC_B = (E1_MPA_Cyc_B - E1_MPA_Cyc_A)/(Cyc_B - Cyc_A))|>
+  mutate(stiffness_ROC_C = (E1_MPA_Cyc_C - E1_MPA_Cyc_B)/(Cyc_C - Cyc_B))|>
+  mutate(stiffness_ROC_D = (E1_MPA_Cyc_D - E1_MPA_Cyc_C)/(Cyc_D - Cyc_C))|>
+  mutate(stiffness_ROC_E = (E1_MPA_Cyc_E - E1_MPA_Cyc_D)/(Cyc_E - Cyc_D))|>
+  mutate(stiffness_ROC_F = (E1_MPA_Cyc_F - E1_MPA_Cyc_E)/(Cyc_F - Cyc_E))|>
+  mutate(stiffness_ROC_G = (E1_MPA_Cyc_G - E1_MPA_Cyc_F)/(Cyc_G - Cyc_F))|>
+  mutate(stiffness_ROC_H = (E1_MPA_Cyc_H - E1_MPA_Cyc_G)/(Cyc_H - Cyc_G))|>
+  mutate(stiffness_ROC_I = (E1_MPA_Cyc_I - E1_MPA_Cyc_H)/(Cyc_I - Cyc_H))|>
+  mutate(stiffness_ROC_J = (E1_MPA_Cyc_J - E1_MPA_Cyc_I)/(Cyc_J - Cyc_I))|>
+  mutate(stiffness_ROC_K = (E1_MPA_Cyc_K - E1_MPA_Cyc_J)/(Cyc_K - Cyc_J))|>
+  mutate(stiffness_ROC_L = (E1_MPA_Cyc_L - E1_MPA_Cyc_K)/(Cyc_L - Cyc_K))|>
+  mutate(stiffness_ROC_M = (E1_MPA_Cyc_M - E1_MPA_Cyc_L)/(Cyc_M - Cyc_L))|>
+  mutate(stiffness_ROC_N = (E1_MPA_Cyc_N - E1_MPA_Cyc_M)/(Cyc_N - Cyc_M))|>
+  mutate(stiffness_frac_A = E1_MPA_Cyc_A / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_B = E1_MPA_Cyc_B / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_C = E1_MPA_Cyc_C / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_D = E1_MPA_Cyc_D / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_E = E1_MPA_Cyc_E / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_F = E1_MPA_Cyc_F / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_G = E1_MPA_Cyc_G / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_H = E1_MPA_Cyc_H / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_I = E1_MPA_Cyc_I / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_J = E1_MPA_Cyc_J / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_K = E1_MPA_Cyc_K / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_L = E1_MPA_Cyc_L / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_M = E1_MPA_Cyc_M / E1_MPA_Cyc_A) |>
+  mutate(stiffness_frac_N = E1_MPA_Cyc_N / E1_MPA_Cyc_A) |>
+  mutate(damping_frac_A = tan(delta_rad_Cyc_A) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_B = tan(delta_rad_Cyc_B) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_C = tan(delta_rad_Cyc_C) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_D = tan(delta_rad_Cyc_D) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_E = tan(delta_rad_Cyc_E) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_F = tan(delta_rad_Cyc_F) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_G = tan(delta_rad_Cyc_G) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_H = tan(delta_rad_Cyc_H) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_I = tan(delta_rad_Cyc_I) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_J = tan(delta_rad_Cyc_J) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_K = tan(delta_rad_Cyc_K) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_L = tan(delta_rad_Cyc_L) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_M = tan(delta_rad_Cyc_M) / tan(delta_rad_Cyc_A)) |>
+  mutate(damping_frac_N = delta_rad_Cyc_N / delta_rad_Cyc_A) |>mutate(damping_ROC_A = NA) |>
+  mutate(damping_ROC_B = (delta_rad_Cyc_B - delta_rad_Cyc_A)/(Cyc_B - Cyc_A))|>
+  mutate(damping_ROC_C = (delta_rad_Cyc_C - delta_rad_Cyc_B)/(Cyc_C - Cyc_B))|>
+  mutate(damping_ROC_D = (delta_rad_Cyc_D - delta_rad_Cyc_C)/(Cyc_D - Cyc_C))|>
+  mutate(damping_ROC_E = (delta_rad_Cyc_E - delta_rad_Cyc_D)/(Cyc_E - Cyc_D))|>
+  mutate(damping_ROC_F = (delta_rad_Cyc_F - delta_rad_Cyc_E)/(Cyc_F - Cyc_E))|>
+  mutate(damping_ROC_G = (delta_rad_Cyc_G - delta_rad_Cyc_F)/(Cyc_G - Cyc_F))|>
+  mutate(damping_ROC_H = (delta_rad_Cyc_H - delta_rad_Cyc_G)/(Cyc_H - Cyc_G))|>
+  mutate(damping_ROC_I = (delta_rad_Cyc_I - delta_rad_Cyc_H)/(Cyc_I - Cyc_H))|>
+  mutate(damping_ROC_J = (delta_rad_Cyc_J - delta_rad_Cyc_I)/(Cyc_J - Cyc_I))|>
+  mutate(damping_ROC_K = (delta_rad_Cyc_K - delta_rad_Cyc_J)/(Cyc_K - Cyc_J))|>
+  mutate(damping_ROC_L = (delta_rad_Cyc_L - delta_rad_Cyc_K)/(Cyc_L - Cyc_K))|>
+  mutate(damping_ROC_M = (delta_rad_Cyc_M - delta_rad_Cyc_L)/(Cyc_M - Cyc_L))|>
+  mutate(damping_ROC_N = (delta_rad_Cyc_N - delta_rad_Cyc_M)/(Cyc_N - Cyc_M))
+
+# These lines lengthen the data by putting each measurement interval in its own data frame, 
+#and row-binding them together.
+foamDataA <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_A, E1_MPA_Cyc_A, 
+                    stiffness_ROC_A, stiffness_frac_A, delta_rad_Cyc_A, damping_ROC_A, 
+                    damping_frac_A, NVP_Cyc_A) |>
+  rename("cycle"="Cyc_A") |>
+  rename("stiffness"="E1_MPA_Cyc_A") |>
+  rename("damping"="delta_rad_Cyc_A") |>
+  rename("NVP"="NVP_Cyc_A") |>
+  mutate("intervalCode"="A") |>
+  rename("stiffnessROC"="stiffness_ROC_A") |>
+  rename("stiffnessFrac"="stiffness_frac_A") |>
+  rename("dampingROC"="damping_ROC_A") |>
+  rename("dampingFrac"="damping_frac_A")
+foamDataB <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_B, E1_MPA_Cyc_B, 
+                    stiffness_ROC_B, stiffness_frac_B, delta_rad_Cyc_B, damping_ROC_B, 
+                    damping_frac_B, NVP_Cyc_B) |>
+  rename("cycle"="Cyc_B") |>
+  rename("stiffness"="E1_MPA_Cyc_B") |>
+  rename("damping"="delta_rad_Cyc_B") |>
+  rename("NVP"="NVP_Cyc_B") |>
+  mutate("intervalCode"="B") |>
+  rename("stiffnessROC"="stiffness_ROC_B") |>
+  rename("stiffnessFrac"="stiffness_frac_B") |>
+  rename("dampingROC"="damping_ROC_B") |>
+  rename("dampingFrac"="damping_frac_B")
+foamDataC <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_C, E1_MPA_Cyc_C, 
+                    stiffness_ROC_C, stiffness_frac_C, delta_rad_Cyc_C, damping_ROC_C, 
+                    damping_frac_C, NVP_Cyc_C) |>
+  rename("cycle"="Cyc_C") |>
+  rename("stiffness"="E1_MPA_Cyc_C") |>
+  rename("damping"="delta_rad_Cyc_C") |>
+  rename("NVP"="NVP_Cyc_C") |>
+  mutate("intervalCode"="C") |>
+  rename("stiffnessROC"="stiffness_ROC_C") |>
+  rename("stiffnessFrac"="stiffness_frac_C") |>
+  rename("dampingROC"="damping_ROC_C") |>
+  rename("dampingFrac"="damping_frac_C")
+foamDataD <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_D, E1_MPA_Cyc_D, 
+                    stiffness_ROC_D, stiffness_frac_D, delta_rad_Cyc_D, damping_ROC_D, 
+                    damping_frac_D, NVP_Cyc_D) |>
+  rename("cycle"="Cyc_D") |>
+  rename("stiffness"="E1_MPA_Cyc_D") |>
+  rename("damping"="delta_rad_Cyc_D") |>
+  rename("NVP"="NVP_Cyc_D") |>
+  mutate("intervalCode"="D") |>
+  rename("stiffnessROC"="stiffness_ROC_D") |>
+  rename("stiffnessFrac"="stiffness_frac_D") |>
+  rename("dampingROC"="damping_ROC_D") |>
+  rename("dampingFrac"="damping_frac_D")
+foamDataE <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_E, E1_MPA_Cyc_E, 
+                    stiffness_ROC_E, stiffness_frac_E, delta_rad_Cyc_E, damping_ROC_E, 
+                    damping_frac_E, NVP_Cyc_E) |>
+  rename("cycle"="Cyc_E") |>
+  rename("stiffness"="E1_MPA_Cyc_E") |>
+  rename("damping"="delta_rad_Cyc_E") |>
+  rename("NVP"="NVP_Cyc_E") |>
+  mutate("intervalCode"="E") |>
+  rename("stiffnessROC"="stiffness_ROC_E") |>
+  rename("stiffnessFrac"="stiffness_frac_E") |>
+  rename("dampingROC"="damping_ROC_E") |>
+  rename("dampingFrac"="damping_frac_E")
+foamDataF <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_F, E1_MPA_Cyc_F, 
+                    stiffness_ROC_F, stiffness_frac_F, delta_rad_Cyc_F, damping_ROC_F, 
+                    damping_frac_F, NVP_Cyc_F) |>
+  rename("cycle"="Cyc_F") |>
+  rename("stiffness"="E1_MPA_Cyc_F") |>
+  rename("damping"="delta_rad_Cyc_F") |>
+  rename("NVP"="NVP_Cyc_F") |>
+  mutate("intervalCode"="F") |>
+  rename("stiffnessROC"="stiffness_ROC_F") |>
+  rename("stiffnessFrac"="stiffness_frac_F") |>
+  rename("dampingROC"="damping_ROC_F") |>
+  rename("dampingFrac"="damping_frac_F")
+foamDataG <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_G, E1_MPA_Cyc_G, 
+                    stiffness_ROC_G, stiffness_frac_G, delta_rad_Cyc_G, damping_ROC_G, 
+                    damping_frac_G, NVP_Cyc_G) |>
+  rename("cycle"="Cyc_G") |>
+  rename("stiffness"="E1_MPA_Cyc_G") |>
+  rename("damping"="delta_rad_Cyc_G") |>
+  rename("NVP"="NVP_Cyc_G") |>
+  mutate("intervalCode"="G") |>
+  rename("stiffnessROC"="stiffness_ROC_G") |>
+  rename("stiffnessFrac"="stiffness_frac_G") |>
+  rename("dampingROC"="damping_ROC_G") |>
+  rename("dampingFrac"="damping_frac_G")
+foamDataH <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_H, E1_MPA_Cyc_H, 
+                    stiffness_ROC_H, stiffness_frac_H, delta_rad_Cyc_H, damping_ROC_H, 
+                    damping_frac_H, NVP_Cyc_H) |>
+  rename("cycle"="Cyc_H") |>
+  rename("stiffness"="E1_MPA_Cyc_H") |>
+  rename("damping"="delta_rad_Cyc_H") |>
+  rename("NVP"="NVP_Cyc_H") |>
+  mutate("intervalCode"="H") |>
+  rename("stiffnessROC"="stiffness_ROC_H") |>
+  rename("stiffnessFrac"="stiffness_frac_H") |>
+  rename("dampingROC"="damping_ROC_H") |>
+  rename("dampingFrac"="damping_frac_H")
+foamDataI <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_I, E1_MPA_Cyc_I, 
+                    stiffness_ROC_I, stiffness_frac_I, delta_rad_Cyc_I, damping_ROC_I, 
+                    damping_frac_I, NVP_Cyc_I) |>
+  rename("cycle"="Cyc_I") |>
+  rename("stiffness"="E1_MPA_Cyc_I") |>
+  rename("damping"="delta_rad_Cyc_I") |>
+  rename("NVP"="NVP_Cyc_I") |>
+  mutate("intervalCode"="I") |>
+  rename("stiffnessROC"="stiffness_ROC_I") |>
+  rename("stiffnessFrac"="stiffness_frac_I") |>
+  rename("dampingROC"="damping_ROC_I") |>
+  rename("dampingFrac"="damping_frac_I")
+foamDataJ <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_J, E1_MPA_Cyc_J, 
+                    stiffness_ROC_J, stiffness_frac_J, delta_rad_Cyc_J, damping_ROC_J, 
+                    damping_frac_J, NVP_Cyc_J) |>
+  rename("cycle"="Cyc_J") |>
+  rename("stiffness"="E1_MPA_Cyc_J") |>
+  rename("damping"="delta_rad_Cyc_J") |>
+  rename("NVP"="NVP_Cyc_J") |>
+  mutate("intervalCode"="J") |>
+  rename("stiffnessROC"="stiffness_ROC_J") |>
+  rename("stiffnessFrac"="stiffness_frac_J") |>
+  rename("dampingROC"="damping_ROC_J") |>
+  rename("dampingFrac"="damping_frac_J")
+foamDataK <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_K, E1_MPA_Cyc_K, 
+                    stiffness_ROC_K, stiffness_frac_K, delta_rad_Cyc_K, damping_ROC_K, 
+                    damping_frac_K, NVP_Cyc_K) |>
+  rename("cycle"="Cyc_K") |>
+  rename("stiffness"="E1_MPA_Cyc_K") |>
+  rename("damping"="delta_rad_Cyc_K") |>
+  rename("NVP"="NVP_Cyc_K") |>
+  mutate("intervalCode"="K") |>
+  rename("stiffnessROC"="stiffness_ROC_K") |>
+  rename("stiffnessFrac"="stiffness_frac_K") |>
+  rename("dampingROC"="damping_ROC_K") |>
+  rename("dampingFrac"="damping_frac_K")
+foamDataL <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_L, E1_MPA_Cyc_L, 
+                    stiffness_ROC_L, stiffness_frac_L, delta_rad_Cyc_L, damping_ROC_L, 
+                    damping_frac_L, NVP_Cyc_L) |>
+  rename("cycle"="Cyc_L") |>
+  rename("stiffness"="E1_MPA_Cyc_L") |>
+  rename("damping"="delta_rad_Cyc_L") |>
+  rename("NVP"="NVP_Cyc_L") |>
+  mutate("intervalCode"="L") |>
+  rename("stiffnessROC"="stiffness_ROC_L") |>
+  rename("stiffnessFrac"="stiffness_frac_L") |>
+  rename("dampingROC"="damping_ROC_L") |>
+  rename("dampingFrac"="damping_frac_L")
+foamDataM <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_M, E1_MPA_Cyc_M, 
+                    stiffness_ROC_M, stiffness_frac_M, delta_rad_Cyc_M, damping_ROC_M, 
+                    damping_frac_M, NVP_Cyc_M) |>
+  rename("cycle"="Cyc_M") |>
+  rename("stiffness"="E1_MPA_Cyc_M") |>
+  rename("damping"="delta_rad_Cyc_M") |>
+  rename("NVP"="NVP_Cyc_M") |>
+  mutate("intervalCode"="M") |>
+  rename("stiffnessROC"="stiffness_ROC_M") |>
+  rename("stiffnessFrac"="stiffness_frac_M") |>
+  rename("dampingROC"="damping_ROC_M") |>
+  rename("dampingFrac"="damping_frac_M")
+foamDataN <- select(foamDataIntermediate, chemIndex:initialStress, Cyc_N, E1_MPA_Cyc_N, 
+                    stiffness_ROC_N, stiffness_frac_N, delta_rad_Cyc_N, damping_ROC_N, 
+                    damping_frac_N, NVP_Cyc_N) |>
+  rename("cycle"="Cyc_N") |>
+  rename("stiffness"="E1_MPA_Cyc_N") |>
+  rename("damping"="delta_rad_Cyc_N") |>
+  rename("NVP"="NVP_Cyc_N") |>
+  mutate("intervalCode"="N") |>
+  rename("stiffnessROC"="stiffness_ROC_N") |>
+  rename("stiffnessFrac"="stiffness_frac_N") |>
+  rename("dampingROC"="damping_ROC_N") |>
+  rename("dampingFrac"="damping_frac_N")
+
+foamData <- rbind(foamDataA, foamDataB, foamDataC, foamDataD, foamDataE, foamDataF, foamDataG, 
+                  foamDataH, foamDataI, foamDataJ, foamDataK, foamDataL, foamDataM, foamDataN)
+
+# Filter rows with NA in the cycle, stiffness, and damping columns
+foamData <- filter(foamData, !is.na(cycle))
+
+# Reorder the columns
+foamData <- select(foamData, 3, 1, 2, 4, 5, 6, 7, 16, 8, 11, 14, 9, 12, 10, 13, 15)
+
+# write the file
+write_csv(foamData, "foamData.csv")
+```
+
+### R Script for plots, models, and tables in Sections 2 and 3:
+
+```{r}
+#| echo: true
+#| eval: false
+
 foam_data <- read.csv("foamData.csv")
 
+#Some extra wrangling
 foam_data_scaled <- foam_data |>
   filter(cycle <= 10000 & cycle > 0)
 
-FactorModel <- lmer(log(stiffnessFrac) ~  porosity + factor(chemIndex) + factor(chemIndex):porosity +  log(cycle) +  factor(chemIndex):log(cycle) + porosity:log(cycle) + factor(chemIndex):porosity:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+FactorModel <- lmer(log(stiffnessFrac) ~  porosity + factor(chemIndex) 
+                    + factor(chemIndex):porosity + log(cycle) +  factor(chemIndex):log(cycle) 
+                    + porosity:log(cycle) + factor(chemIndex):porosity:log(cycle) 
+                    + (1 + log(cycle)|ID), data = foam_data_scaled)
 
-dampingModel <- lmer(log(dampingFrac) ~ porosity + factor(chemIndex) + freq + log(cycle) + porosity:log(cycle) + freq:log(cycle) + factor(chemIndex):log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+dampingModel <- lmer(log(dampingFrac) ~ porosity + factor(chemIndex) + freq + log(cycle) 
+                     + porosity:log(cycle) + freq:log(cycle) + factor(chemIndex):log(cycle) 
+                     + (1 + log(cycle)|ID), data = foam_data_scaled)
 
 # Convert intervalCode to a factor with specified levels
-foam_data_scaled$intervalCode <- factor(foam_data_scaled$intervalCode, levels = c("A", "B", "C", "D","E", "F", "G", "H","I", "J", "K", "L","M", "N"))
+foam_data_scaled$intervalCode <- factor(foam_data_scaled$intervalCode, levels = c("A", "B", "C", 
+                                       "D","E", "F", "G", "H","I", "J", "K", "L","M", "N"))
 
 # EDA code
 
 # graph1
-foam_Samples <- foam_data[ ,c("ID", "chemIndex", "porosity", "freq", "amp", "initialStrain", "initialStress")]
+foam_Samples <- foam_data[ ,c("ID", "chemIndex", "porosity", "freq", "amp", "initialStrain", 
+                              "initialStress")]
 foam_Samples <- unique(foam_Samples)
+
+count(foam_Samples, chemIndex, porosity)
 
 ggplot(foam_Samples, aes(x=freq)) +
   geom_histogram(bins=10)
@@ -460,57 +762,53 @@ combined <- p1 + p2
 combined
 
 # graph3
-sp1 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = freq))
-#sp2 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
-#sp3 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = porosity))
+sp1 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) 
++ geom_point(aes(color = freq))
 
-#combined <- sp1 + sp2 + sp3
-
-#combined
-
-dp1 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = freq))
-#dp2 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
-#dp3 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = porosity))
-
-#combined <- dp1 + dp2 + dp3
-
-#combined
+dp1 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) 
++ geom_point(aes(color = freq))
 
 combined <- sp1 + dp1
 combined
 
 # graph4
-sfc1 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data$porosity == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+sfc1 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data$porosity 
+                                == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
   geom_point(color="red", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.325, 0.15) +
   labs(title="ChemIndex 79, Porisity 81") +
   theme(plot.title = element_text(size=25))
-sfc2 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data$porosity == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+sfc2 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data$porosity 
+                                == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
   geom_point(color="green", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.325, 0.15) +
   labs(title="ChemIndex 100, Porisity 81") +
   theme(plot.title = element_text(size=25))
-sfc3 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data$porosity == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+sfc3 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data$porosity 
+                                == "high",], aes(x=log(cycle), y=log(stiffnessFrac))) +
   geom_point(color="cyan2", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.325, 0.15) +
   labs(title="ChemIndex 121, Porisity 81") +
   theme(plot.title = element_text(size=25))
-sfc4 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+sfc4 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data$porosity 
+                                == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
   geom_point(color="red3", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.325, 0.15) +
   labs(title="ChemIndex 79, Porisity 71") +
   theme(plot.title = element_text(size=25))
-sfc5 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+sfc5 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data$porosity
+                                == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
   geom_point(color="green4", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.325, 0.15) +
   labs(title="ChemIndex 100, Porisity 71") +
   theme(plot.title = element_text(size=25))
-sfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data$porosity == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
+sfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data$porosity
+                                == "low",], aes(x=log(cycle), y=log(stiffnessFrac))) +
   geom_point(col="blue", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.325, 0.15) +
@@ -521,37 +819,43 @@ combined <- sfc1 + sfc2 + sfc3 + sfc4 + sfc5 + sfc6 + plot_layout(ncol = 3)
 combined
 
 # graph5
-dfc1 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data_scaled$porosity == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
+dfc1 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data_scaled$porosity 
+                                == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(color="red", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.175, 0.125) +
   labs(title="ChemIndex 79, Porisity 81") +
   theme(plot.title = element_text(size=25))
-dfc2 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data_scaled$porosity == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
+dfc2 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data_scaled$porosity 
+                                == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(color="green", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.175, 0.125) +
   labs(title="ChemIndex 100, Porisity 81") +
   theme(plot.title = element_text(size=25))
-dfc3 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scaled$porosity == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
+dfc3 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scaled$porosity 
+                                == "high",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(color="cyan2", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.175, 0.125) +
   labs(title="ChemIndex 121, Porisity 81") +
   theme(plot.title = element_text(size=25))
-dfc4 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
+dfc4 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 1 & foam_data_scaled$porosity 
+                                == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(color="red3", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.175, 0.125) +
   labs(title="ChemIndex 79, Porisity 71") +
   theme(plot.title = element_text(size=25))
-dfc5 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
+dfc5 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 2 & foam_data_scaled$porosity 
+                                == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(color="green4", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.175, 0.125) +
   labs(title="ChemIndex 100, Porisity 71") +
   theme(plot.title = element_text(size=25))
-dfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scaled$porosity == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
+dfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scaled$porosity 
+                                == "low",], aes(x=log(cycle), y=log(dampingFrac))) +
   geom_point(col="blue", size=3) + 
   geom_hline(yintercept = 0, linetype="dashed") +
   ylim(-0.175, 0.125) +
@@ -561,27 +865,14 @@ dfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scal
 combined <- dfc1 + dfc2 + dfc3 + dfc4 + dfc5 + dfc6 + plot_layout(ncol = 3)
 combined
 
-
-# summary of stiffnessFrac model 
-summary(FactorModel)
-
-# residuals and QQ plot of stiffnessFrac model
-plot(FactorModel)
-qqnorm(resid(FactorModel))
-qqline(resid(FactorModel))
+Anova(FactorModel)
 
 # random effects of stiffnessFrac model
 re <- ranef(FactorModel)$ID
 
 plot(re)
 
-# summary of dampingFrac model
-summary(dampingModel)
-
-# residuals and QQ plot of dampingFrac model
-plot(dampingModel)
-qqnorm(resid(dampingModel))
-qqline(resid(dampingModel))
+Anova(dampingModel)
 
 # random effects of dampingFrac model
 re <- ranef(dampingModel)$ID
@@ -589,44 +880,44 @@ re <- ranef(dampingModel)$ID
 plot(re)
 ```
 
-```{r, include=TRUE}
-foam_Samples <- foam_data[ ,c("ID", "chemIndex", "porosity", "freq", "amp", "initialStrain", "initialStress")]
-foam_Samples <- unique(foam_Samples)
-
-count(foam_Samples, chemIndex)
-count(foam_Samples, porosity)
-count(foam_Samples, chemIndex, porosity)
-```
 
 ```{r}
-#| echo: false
+#| echo: true
 #| label: fig-example1
 #| warning: false
 #| fig-cap: "Backward Selection for stiffnessFrac Predictors"
 #| fig-align: "center"
 #| fig-width: 7
-#| fig-height: 5
-regfit.full <- regsubsets(log(stiffnessFrac) ~ chemIndex + porosity + freq + amp + initialStrain + initialStress + log(cycle) + (chemIndex + porosity + freq + amp + initialStrain + initialStress)*log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+#| fig-height: 4
+regfit.full <- regsubsets(log(stiffnessFrac) ~ chemIndex + porosity + freq + amp 
+                          + initialStrain + initialStress + log(cycle) + (chemIndex 
+                          + porosity + freq + amp + initialStrain + initialStress)*log(cycle) 
+                          + (1 + log(cycle)|ID), 
+                          data = foam_data_scaled)
 #regfit.full <- regsubsets(stiffnessFrac ~ ., data = foam_data_scaled)
 plot(regfit.full, scale = 'bic')
 ```
 
 ```{r}
-#| echo: false
+#| echo: true
 #| label: fig-example2
 #| warning: false
 #| fig-cap: "Backward Selection for dampingFrac Predictors"
 #| fig-align: "center"
 #| fig-width: 7
-#| fig-height: 5
+#| fig-height: 4
 #| 
-regfit.full <- regsubsets(log(dampingFrac) ~ chemIndex + porosity + freq + amp + initialStrain + initialStress + log(cycle) + chemIndex:porosity + (chemIndex + porosity + freq + amp + initialStrain + initialStress + chemIndex:porosity)*log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled)
+regfit.full <- regsubsets(log(dampingFrac) ~ chemIndex + porosity + freq + amp 
+                          + initialStrain + initialStress + log(cycle) + chemIndex:porosity 
+                          + (chemIndex + porosity + freq + amp + initialStrain 
+                          + initialStress + chemIndex:porosity)*log(cycle) 
+                          + (1 + log(cycle)|ID), data = foam_data_scaled)
 
 plot(regfit.full, scale = "bic")
 ```
 
-```{r, echo = FALSE}
-#| echo: false
+```{r}
+#| echo: true
 #| label: fig-example3
 #| warning: false
 #| fig-cap: "Residual Plot of Stiffness Fraction Model"
@@ -637,8 +928,8 @@ plot(regfit.full, scale = "bic")
 plot(FactorModel)
 ```
 
-```{r, echo = FALSE}
-#| echo: false
+```{r}
+#| echo: true
 #| label: fig-example4
 #| warning: false
 #| fig-cap: "QQ Plot of Stiffness Fraction Model"
@@ -650,8 +941,8 @@ qqnorm(resid(FactorModel))
 qqline(resid(FactorModel))
 ```
 
-```{r, echo = FALSE}
-#| echo: false
+```{r}
+#| echo: true
 #| label: fig-example5
 #| warning: false
 #| fig-cap: "Residual Plot of Damping Fraction Model"
@@ -662,8 +953,8 @@ qqline(resid(FactorModel))
 plot(dampingModel)
 ```
 
-```{r, echo = FALSE}
-#| echo: false
+```{r}
+#| echo: true
 #| label: fig-example6
 #| warning: false
 #| fig-cap: "QQ Plot of Damping Fraction Model"
