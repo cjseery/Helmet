@@ -401,7 +401,7 @@ summary(dampingModel)$coef
 ```
 
 \begin{center}
-\text{Table 6: Coefficients for Damaping Fraction Model}
+\text{Table 7: Coefficients for Damaping Fraction Model}
 \end{center}
 
 The summary of this model shows a high significance in almost all of our coefficients through small p-values (less than 0.05). These small p-values suggest that these variables are significant predictors of our response variable. Like the stiffness model, there are some predictors that do not have a significant p-value but their interaction terms are very significant. We can double check our predictors in the below table as well and see that all our predictors are significant. 
@@ -409,6 +409,10 @@ The summary of this model shows a high significance in almost all of our coeffic
 ```{r}
 Anova(dampingModel)
 ```
+
+\begin{center}
+\text{Table 8: Anova Analysis of Damping Fraction Model}
+\end{center}
 
 We used a residuals vs fitted plot and QQ plot to assess the conditions of our model (see Appendix). We found that this damping model meets all of these conditions which therefore we can analyze our model's results. 
 
