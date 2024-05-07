@@ -320,9 +320,9 @@ Porosity also appears to have some effect. Trends in log(dampingFrac) for chemic
 
 ## 3. Statistical Analysis 
 
-Based on the initial research questions, we will be developing two separate models: one for stiffness fraction and the other for damping fraction. Due to the experimental design and the fact that our observations are not independent of each other, we used a mixed model format for our predictions.
+Based on the research questions, we developed two separate models: one for stiffness fraction and the other for damping fraction. Due to the experimental design, and the fact that our observations are not independent of each other, we used a mixed model format for our predictions. Log(cycle) was treated as a level-one variable because it changes across individual measurements, while all other variables were treated as level-two variables because they only vary across foam samples. In a mixed model, level-two variables impact the model intercept, and level-one variables interact with the level-two variables to effect the model slope.
 
-To select our variables, we started with a mixed model where all variables aside from log(cycle) were treated as level two variables and log(cycle) was treated as a level one variable. The level two variables on their own will impact the intercept of our model and the interaction between log(cycle) and the other variables will impact the slope of our model. After starting with this full model, we manually removed variables from the model to increase the significance of the coefficients and to minimize the REML. Once a base model was created, we then used ANOVA testing to determine if the different levels of each predictor were significant and to compare against the full model. Based on this testing, we were able to create a model using the following predictors:
+After starting with full models, we manually removed variables to increase the significance of the coefficients and to minimize the REML. Once base models were created, we used ANOVA testing to determine if the different levels of each predictor were significant and to compare against the full models. Based on this testing, we created models with the following predictors:
 
 |    Stiffness Model Predictors    |        Damping Model Predictors                     
 |:---------------------------------|:------------------------------------|
@@ -334,19 +334,21 @@ To select our variables, we started with a mixed model where all variables aside
         freq:log(cycle)            |           freq:log(cycle)
         amp:log(cycle)             |         porosity:log(cycle)
             
-For the purpose of this paper, these are the variables we will be using in our model. We did find that there is a significant relationship between stiffness fraction and an interaction between amplitude and frequency. Unfortunately, the addition of this term lowered the significance of the relationship between the response and chemical index. Since chemical index is one of the focuses of this experiment, we decided to continue with our original model instead of including this term. 
+We also found a significant relationship between stiffness fraction and the interaction between amplitude and frequency, but the addition of this term lowered the significance of the relationship between the response and chemical index. Since understanding the impact of chemical index is important to Foster, we decided to continue with our original model instead of including this term. 
    
 ## 3.1 Stiffness
 
-To best predict the value of log(stiffness fraction), we used the following model:
+To predict log(stiffnessFrac), we used the following model:
 
-Level 1: $\log(\text{stiffnessFrac}) = \alpha_i + \beta_i*log(cycle)$
-Level 2: $\alpha_i = \alpha_0 + \alpha_1*\text{chemIndex} + \alpha_2*\text{freq} + \alpha_3*\text{amp}$
-         $\beta_i = \beta_0 + \beta_1*\text{chemIndex} +\beta_2*\text{freq} + \beta_3*\text{amp}$
+**Level 1**: $\log(\text{stiffnessFrac}) = \alpha_i + \beta_i*log(cycle)$
 
-All samples have a stiffness fraction of 1 at cycle zero. The structure of a mixed model creates individual intercepts for each sample so for this model, we will be using samples starting at the first cycle measurement after cycle zero and going to cycle 10000. The alpha terms in the model will explain the impact of the covariates at the initial time recorded and the beta terms will explain the impact of the covariates on the stiffness fraction as time goes on.
+**Level 2**: $\alpha_i = \alpha_0 + \alpha_1*\text{chemIndex} + \alpha_2*\text{freq} + \alpha_3*\text{amp}$
+         
+$\beta_i = \beta_0 + \beta_1*\text{chemIndex} +\beta_2*\text{freq} + \beta_3*\text{amp}$
 
-From @Table-1 we see a high significance in our coefficients. Although not every variable is significant on it's own, the interaction with time is. For example, chemical index does not appear to have a significant relationship with the response on it's own, but one level of chemical index has a significant relationship when interacted with cycle. The interaction terms in this model are an indicator of how the response will change based on both a covariate and time. From this summary, amplitude appears to have the largest positive impact on initial stiffness fraction and the largest negative impact as time progresses.
+All samples have a stiffness fraction of 1 at cycle zero. A mixed model can create individual intercepts for each sample, so for this model, we used samples starting at the first cycle measurement after cycle zero. Thus, $\alpha$ terms in the model  explain the impact of the covariates right after compressions begin, and the $\beta$ terms explain the impact of the covariates as time goes on.
+
+From @Table-1, we see a high significance in our coefficients. Some variables are not significant on their own, their interactions with log(cycle) are. For example, chemical index does not appear to have a significant relationship with the response on it's own, but one level of chemical index has a significant relationship when interacted with log(cycle). The interaction terms explain how log(cycle) effects stiffness fraction differently under different conditions. From this summary, amplitude appears to have the largest positive impact on initial stiffness fraction, and the largest negative impact as time progresses.
 
 ```{r, echo = FALSE}
 #| echo: false
@@ -361,7 +363,7 @@ suppressWarnings(FactorModel1 <- lmer(log(stiffnessFrac) ~ factor(chemIndex) + f
 summary(FactorModel1)$coef
 ```
 
-Although @Table-1 indicates there is significance to the different levels of chemical index, the output below in @Table-2 confirms that there is a significant difference between at least on of the levels of chemical index. To further assess the significane of the model, we explored the residual plots and found that this model meets the linearity, normality, and equal variance conditions. These plots can be further explored in the appendix.
+Although @Table-1 indicates there is significance to the different levels of chemical index, the output below in @Table-2 confirms that there is a significant difference between at least one of the levels of chemical index. To further assess the significance of the model, we used diagnostic plots to find that this model meets the linearity, normality, and equal variance conditions. These plots are in the appendix.
 
 ```{r, echo = FALSE}
 #| echo: false
@@ -374,7 +376,7 @@ Although @Table-1 indicates there is significance to the different levels of che
 Anova(FactorModel1)
 ```
 
-Lastly, given that we are using a mixed effects model, it is necessary to explore the random effects associated with the model. From @fig-6, we notice that as the intercept increases, the slope decreases. This is a very defined trend and supports our conclusion that a mixed model should be used. We would expect to see that each of the foams starts at a similar stiffness fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
+Lastly, it was necessary to explore the random effects associated with the mixed model. From @fig-6, we notice that as the intercept increases, the slope decreases. This is a very defined trend, supporting our conclusion that a mixed model should be used. We would expect the foams to start at a similar stiffness fraction, and deviate based on the other predictors as time passes. This plot confirms this behavior.
 
 ```{r, echo = FALSE}
 #| echo: false
@@ -392,7 +394,7 @@ plot(re)
 
 ##	3.2 Damping
 
-To best predict the value of log(damping fraction), we used this model:
+To predict log(damping fraction), we used this model:
 
 **Level 1**: $\log(\text{dampingFrac}) = \alpha_i + \beta_i*log(cycle)$
 
@@ -406,7 +408,7 @@ The summary of this model shows a high significance in almost all of our coeffic
 Anova(dampingModel)
 ```
 
-We used a residuals vs fitted plot and QQ plot to assess the conditions of our model (see @fig-example5 and @fig-example6, in the Appendix). We found that this damping model meets all of these conditions which therefore we can analyze our model's results. 
+We used a residuals vs fitted plot and QQ plot to assess the conditions of our model (see Appendix). We found that this damping model meets all of these conditions which therefore we can analyze our model's results. 
 
 Lastly, we must look at the random effects of our model in @fig-7. Like the stiffness model, as the intercept increases, the slope decreases. Although the trend is not as linear as the stiffness model, it still supports our conclusion that a mixed model should be used. Again, we would expect to see that each of the foams starts at a similar damping fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
 
