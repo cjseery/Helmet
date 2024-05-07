@@ -391,13 +391,22 @@ To predict log(damping fraction), we used this model:
 
 **Level 1**: $\log(\text{dampingFrac}) = \alpha_i + \beta_i*log(cycle)$
 
-**Level 2**: $\alpha_i = \alpha_0 + \alpha_1*\text{porosity} + \alpha_2*\text{chemIndex} + \alpha_3*\text{freq}$
+**Level 2**: $\alpha_i = \alpha_0 + \alpha_1*\text{chemIndex} + \alpha_2*\text{freq}$
 
-$\beta_i = \beta_0 + \beta_1*\text{porosity} + \beta_2*\text{chemIndex} +\beta_3*\text{freq}$
-
-The summary of this model shows a high significance in almost all of our coefficients through small p-values (less than 0.05). These small p-values suggest that these variables are significant predictors of our response variable. The only value that does not show a significant p-value is chemIndex, which we chose to keep because the interaction between chemIndex and log(cycle) is significant. This model has multiple interactions: porosity and log(cycle), frequency and log(cycle), and chemical index and log(cycle). These interactions show that if all other variables are held constant, there is a combined effect of these interactions on the response variable. 
+$\beta_i = \beta_0 + \beta_1*\text{chemIndex} +\beta_2*\text{freq}$
 
 ```{r, echo = FALSE}
+suppressWarnings(dampingModel <- lmer(log(stiffnessFrac) ~ factor(chemIndex) + freq + log(cycle) +  factor(chemIndex):log(cycle) + freq:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled))
+summary(dampingModel)$coef
+```
+
+\begin{center}
+\text{Table 6: Coefficients for Damaping Fraction Model}
+\end{center}
+
+The summary of this model shows a high significance in almost all of our coefficients through small p-values (less than 0.05). These small p-values suggest that these variables are significant predictors of our response variable. Like the stiffness model, there are some predictors that do not have a significant p-value but their interaction terms are very significant. We can double check our predictors in the below table as well and see that all our predictors are significant. 
+
+```{r}
 Anova(dampingModel)
 ```
 
@@ -421,10 +430,9 @@ plot(re)
 
 ## 4. Recommendations 
 
-**Question 1:** We see that frequency, amplitude, chemical index, and cycle all have significant impacts on both stiffness and damping. Porosity also has a significant impact on damping, but not on stiffness.
+**Question 1:** We see that frequency, amplitude, chemical index, and cycle all have significant impacts on both stiffness and damping. 
 
-
-**Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 and a low porosity will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and porosity.
+**Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and frequency.
 
 ## 5. Additional Considerations
 
