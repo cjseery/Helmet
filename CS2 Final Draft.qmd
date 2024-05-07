@@ -105,7 +105,7 @@ The formulas for stiffnessFrac and dampingFrac were specified by Foster. She bel
 
 ##  2. Exploratory Data Analysis (EDA)
 
-We reformatted the data from wide to long to ensure each observation represented one measurement, not one foam sample. Measurements taken beyond 10,000 cycles were removed to maintain consistency across observations, and because Moira identified this as the most relevant time frame.
+We reformatted the data from wide to long to ensure each observation represented one measurement, not one foam sample. Measurements taken beyond 10,000 cycles were removed to maintain consistency across observations, and because Moira identified this as the most relevant time frame. The first measurements for stiffnessFrac and dampingFrac were removed as well, because they were all equal to 1 and did not convey useful information.
 
 There were a few concerning observations with negative values of stiffness, likely due to a fault in the measuring machine. At Foster’s instruction, we converted these negative stiffness values to positive. Then we made the transformed response variable stiffnessFrac, which reports each stiffness measurement divided by that foam sample's initial stiffness measurement.
 
@@ -136,12 +136,11 @@ These counts show that a relatively small number of each type of foam were teste
 foam_Samples <- foam_data[ ,c("ID", "chemIndex", "porosity", "freq", "amp", "initialStrain", "initialStress")]
 foam_Samples <- unique(foam_Samples)
 
-ggplot(foam_Samples, aes(x=freq)) +
+ggplot(foam_Samples, aes(x=amp)) +
   geom_histogram(bins=10)
 ```
 
-The histogram in @fig-1 shows the distribution of compression frequencies among the foam samples revealing that certain compression frequencies were tested more frequently than others. These non-uniformities in sample distribution might impact the reliability of conclusions drawn from the analysis.
-
+The histogram in @fig-1 shows the distribution of compression amplitudes among the foam samples, revealing that certain amplitudes were tested much less frequently than others. These non-uniformities in sample distribution might impact the reliability of conclusions drawn from the analysis.
 
 ```{r}
 #| echo: false
@@ -164,6 +163,7 @@ combined <- p1 + p2
 
 combined
 ```
+
 In order to see how stiffnessFrac and dampingFrac change over time for all foams, we plotted a scatter plot for each vs cycle. The dot colors in @fig-2 represent which foam sample they were measured from. As cycle number increases, the stiffnessFrac and dampingFrac values not only change, but spread further apart. StiffnessFrac and dampingFrac both appear to have a relationship with cycle, but that relationship looks different for each foam sample.
 
 ```{r}
@@ -251,7 +251,7 @@ combined
 
 The plots in @fig-4 separate the log(stiffnessFrac) vs log(cycle) graph in @fig-3 to show how the interaction between chemical index and porosity impact log(stiffnessFrac). We can see that the chemical index 79 has many samples where log(stiffnessFrac) trends upwards, whereas chemical indices 100 and 121 mostly trend downwards. This indicates a relationship between log(stiffnessFrac) and chemical index. Downward trends mean the stiffness decreases as cycle increases, which is not what we are looking for in a durable foam.
 
-We also see an effect from porosity. For chemical index 79, low porosity foam trends downward more often than high porosity foam, and for chemical index 100, low porosity foam trends upward more often than high porosity foam. So not only does porosity affect log(stiffnessFrac), but it effects it different ways for different porosities. This suggests that a porosity:chemIndex interaction term would improve our model.
+We also see an effect from porosity. For chemical index 79, low porosity foam trends downward more often than high porosity foam, and for chemical index 100, low porosity foam trends upward more often than high porosity foam. So not only does porosity affect log(stiffnessFrac), but it effects it different ways for different chemical indices This suggests that a porosity:chemIndex interaction term might improve our model.
 
 
 ```{r}
@@ -306,12 +306,12 @@ combined
 
 The plots in @fig-5 separate the log(dampingFrac) vs log(cycle) graph from above to show how the interaction between chemical index and porosity impact log(dampingFrac). We can see differences in the log(dampingFrac) trends between different chemical indices, so there is likely a relationship present, but this relationship looks less pronounced than it was for the log(stiffnessFrac) trends.
 
-Porosity also appears to have some effect. Trends in log(dampingFrac) for chemical index 121 are more similar to each other for low porosity than for high porosity, and trends in log(dampingFrac) for chemical index 79 are bit more similar to each other for high porosity than for low porosity. This suggests a porosity:chemIndex interaction term would improve our damping model, but this is still less clear than it was for stiffness.
+Porosity also appears to have some effect. Trends in log(dampingFrac) for chemical index 121 are more similar to each other for low porosity than for high porosity, and trends in log(dampingFrac) for chemical index 79 are bit more similar to each other for high porosity than for low porosity. This suggests a porosity:chemIndex interaction term could improve our damping model, but this is still less clear than it was for stiffness.
 
 
 ## 3. Statistical Analysis 
 
-Based on the research questions, we developed two separate models: one for stiffness fraction and the other for damping fraction. Due to the experimental design, and the fact that our observations are not independent of each other, we used a mixed model format for our predictions. Log(cycle) was treated as a level-one variable because it changes across individual measurements, while all other variables were treated as level-two variables because they only vary across foam samples. In a mixed model, level-two variables impact the model intercept, and level-one variables interact with the level-two variables to effect the model slope.
+Based on the research questions, we developed two separate models: one for stiffness fraction and the other for damping fraction. Due to the experimental design, and the fact that measurements from the same sample are not independent of each other, we used a mixed model format for our predictions. Log(cycle) was treated as a level-one variable because it changes across individual measurements, while all other variables were treated as level-two variables because they only vary across foam samples. In a mixed model, level-two variables impact the model intercept, and level-one variables interact with the level-two variables to effect the model slope. This accounts for each sample appeared to react to log(cycle) differently.
 
 After starting with full models, we manually removed variables to increase the significance of the coefficients and to minimize the REML. Once base models were created, we used ANOVA testing to determine if the different levels of each predictor were significant and to compare against the full models. Based on this testing, we created models with the following predictors:
 
@@ -329,7 +329,9 @@ After starting with full models, we manually removed variables to increase the s
 \text{Table 4: Selected Predictors}
 \end{center}
 
-We also found a significant relationship between stiffness fraction and the interaction between amplitude and frequency, but the addition of this term lowered the significance of the relationship between the response and chemical index. Since understanding the impact of chemical index is important to Foster, we decided to continue with our original model instead of including this term. 
+We also found a significant relationship between stiffness fraction and the interaction between amplitude and frequency, but the addition of this term lowered the significance of the relationship between the response and chemical index. Since understanding the impact of chemical index is important to Foster, we decided to continue with our original model instead of including this term.
+
+Despite the expectations we got from figures 4 and 5, we could not determine that an interaction between chemical index and porosity was as significant as the predictors listed in Table 4, so it was not included.
    
 ## 3.1 Stiffness
 
@@ -341,7 +343,7 @@ To predict log(stiffnessFrac), we used the following model:
          
 $\beta_i = \beta_0 + \beta_1*\text{chemIndex} +\beta_2*\text{freq} + \beta_3*\text{amp}$
 
-All samples have a stiffness fraction of 1 at cycle zero. A mixed model can create individual intercepts for each sample, so for this model, we used samples starting at the first cycle measurement after cycle zero. Thus, $\alpha$ terms in the model  explain the impact of the covariates right after compressions begin, and the $\beta$ terms explain the impact of the covariates as time goes on.
+The $\alpha$ terms in the model explain the impact of the covariates right after compressions begin (intercepts), and the $\beta$ terms explain the impact of the covariates as time goes on (slopes).
 
 ```{r, echo = FALSE}
 library(car)
@@ -353,7 +355,9 @@ summary(FactorModel1)$coef
 \text{Table 5: Coefficients for Stiffness Fraction Model}
 \end{center}
 
-In Table 5, we see high significance (aka p-value < 0.05) for most of our coefficients. Some variables are not significant on their own, their interactions with log(cycle) are. For example, chemical index does not appear to have a significant relationship with the response on it's own, but one level of chemical index has a significant relationship when interacted with log(cycle). The interaction terms explain how log(cycle) effects stiffness fraction differently under different conditions. From this summary, amplitude appears to have the largest positive impact on initial stiffness fraction, and the largest negative impact as time progresses.
+In Table 5, we see high significance (aka p-value < 0.05) for most of our coefficients. Some variables are not significant on their own, their interactions with log(cycle) are. For example, chemical index does not appear to have a significant relationship with the response on it's own, but one level of chemical index has a significant relationship when interacted with log(cycle). The interaction terms explain how log(cycle) effects stiffness fraction differently under different conditions. 
+
+In this summary, log(cycle) has a positive relationship with stiffnessFrac, but that is only when frequency and amplitude are zero. The interactions of freq and amp with log(cycle) have negative coefficients, showing us that stiffness decreases more when compressions are faster and larger. Chemical index levels 2 and 3 (aka 100 and 121) interacted with log(cycle) also have negative coefficients, indicating that these foams lose stiffness faster than foam with index 79.
 
 Although Table 5 indicates chemical index levels 2 and 3 (aka 100 and 121) are not significant, the output below in Table 6 confirms that at least one chemical index is significantly different from another. To further assess the model, we used diagnostic plots to find that it meets the linearity, normality, and equal variance conditions. These plots are in the appendix.
 
@@ -426,7 +430,7 @@ plot(re)
 
 One concern we have about our conclusions is that they were made based on relatively few observations. Our model for stiffness fraction, for example, depends on chemical index, frequency, and amplitude, and only 12 samples with chemical index 100 were tested. There are too many possible combinations of frequency and amplitude to be explored thoroughly with just 12 samples. In cases like this, our models' coefficient estimates are based on very little information. The p-values gave us confidence that the coefficients were not zero, but our estimates could still be far off from their true values. We would need more observations to get a more reliable estimate of the true coefficients.
 
-A similar concern comes from foam types and testing conditions that were used less often, such as high frequency. The reliability of our models is already limited, and for these cases they are even less reliable. Additionally, if one variety of foam was never tested at high frequency, then the model's claims about that foam at high frequency are based on nothing, and should not be trusted at all. So not all information this model gives on what effects stiffness and damping in foam is equally trustworthy. 
+A similar concern comes from foam types and testing conditions that were used less often, such as high amplitude The reliability of our models is already limited, and for these cases they are even less reliable. Additionally, if one variety of foam was never tested at high amplitude, then the model's claims about that foam at high frequency are based on nothing, and should not be trusted at all. So not all information this model gives on what effects stiffness and damping in foam is equally trustworthy. 
 
 Our models could have also been thrown off by conditions we didn't consider, such as room temperature and how many other people were using the laboratory. Since these conditions were not controlled for, they could have had an effect we were unable to detect.
 
@@ -752,7 +756,7 @@ foam_Samples <- unique(foam_Samples)
 
 count(foam_Samples, chemIndex, porosity)
 
-ggplot(foam_Samples, aes(x=freq)) +
+ggplot(foam_Samples, aes(x=amp)) +
   geom_histogram(bins=10)
 
 # graph2
