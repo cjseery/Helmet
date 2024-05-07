@@ -1,7 +1,7 @@
 ---
 title: "Helmet Foam Case Study Report"
 author: 'Katie Greene, Ava Harman, Chris Seery, Ian Stonecypher'
-date: 'May, 2024'
+date: '2024-05-06'
 format: pdf
 ---
 
@@ -131,16 +131,16 @@ These counts show that a relatively small number of each type of foam were teste
 #| fig-cap: "Histogram of Frequencies Tested"
 #| fig-align: "center"
 #| fig-width: 4
-#| fig-height: 4
+#| fig-height: 3
 
 foam_Samples <- foam_data[ ,c("ID", "chemIndex", "porosity", "freq", "amp", "initialStrain", "initialStress")]
 foam_Samples <- unique(foam_Samples)
 
-ggplot(foam_Samples, aes(x=amp)) +
+ggplot(foam_Samples, aes(x=freq)) +
   geom_histogram(bins=10)
 ```
 
-The histogram in @fig-1 shows the distribution of compression amplitudes among the foam samples, revealing that certain amplitudes were tested much less frequently than others. These non-uniformities in sample distribution might impact the reliability of conclusions drawn from the analysis.
+The histogram in @fig-1 shows the distribution of compression frequencies among the foam samples, revealing that certain frequencies were tested much less often than others. These non-uniformities in sample distribution might impact the reliability of conclusions drawn from the analysis.
 
 ```{r}
 #| echo: false
@@ -163,6 +163,8 @@ combined <- p1 + p2
 
 combined
 ```
+
+\newpage
 
 In order to see how stiffnessFrac and dampingFrac change over time for all foams, we plotted a scatter plot for each vs cycle. The dot colors in @fig-2 represent which foam sample they were measured from. As cycle number increases, the stiffnessFrac and dampingFrac values not only change, but spread further apart. StiffnessFrac and dampingFrac both appear to have a relationship with cycle, but that relationship looks different for each foam sample.
 
@@ -311,7 +313,7 @@ Porosity also appears to have some effect. Trends in log(dampingFrac) for chemic
 
 ## 3. Statistical Analysis 
 
-Based on the research questions, we developed two separate models: one for stiffness fraction and the other for damping fraction. Due to the experimental design, and the fact that measurements from the same sample are not independent of each other, we used a mixed model format for our predictions. Log(cycle) was treated as a level-one variable because it changes across individual measurements, while all other variables were treated as level-two variables because they only vary across foam samples. In a mixed model, level-two variables impact the model intercept, and level-one variables interact with the level-two variables to effect the model slope. This accounts for each sample appeared to react to log(cycle) differently.
+Based on the research questions, we developed two separate models: one for stiffness fraction and the other for damping fraction. Due to the experimental design, and the fact that measurements from the same sample are not independent of each other, we used a mixed model format for our predictions. Log(cycle) was treated as a level-one variable because it changes across individual measurements, while all other variables were treated as level-two variables because they only vary across foam samples. In a mixed model, level-two variables impact the model intercept, and level-one variables interact with the level-two variables to effect the model slope. This accounts for how each sample appeared to react to log(cycle) differently.
 
 After starting with full models, we manually removed variables to increase the significance of the coefficients and to minimize the REML. Once base models were created, we used ANOVA testing to determine if the different levels of each predictor were significant and to compare against the full models. Based on this testing, we created models with the following predictors:
 
@@ -393,7 +395,7 @@ To predict log(damping fraction), we used this model:
 
 **Level 2**: $\alpha_i = \alpha_0 + \alpha_1*\text{chemIndex} + \alpha_2*\text{freq}$
 
-$\beta_i = \beta_0  + \beta_2*\text{chemIndex} +\beta_3*\text{freq}$
+$\beta_i = \beta_0  + \beta_1*\text{chemIndex} +\beta_2*\text{freq}$
 
 ```{r, echo = FALSE}
 suppressWarnings(dampingModel <- lmer(log(stiffnessFrac) ~ factor(chemIndex) + freq + log(cycle) +  factor(chemIndex):log(cycle) + freq:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled))
@@ -404,7 +406,11 @@ summary(dampingModel)$coef
 \text{Table 7: Coefficients for Damaping Fraction Model}
 \end{center}
 
-The summary of this model shows a high significance in almost all of our coefficients through small p-values (less than 0.05). These small p-values suggest that these variables are significant predictors of our response variable. Like the stiffness model, there are some predictors that do not have a significant p-value but their interaction terms are very significant. We can double check our predictors in the below table as well and see that all our predictors are significant. 
+The summary of this model shows a high significance in almost all of our coefficients through small p-values (less than 0.05). These small p-values suggest that these variables are significant predictors of our response variable. 
+
+Like in the stiffnessFrac model, the interaction between log(cycle) and frequency has a negative coefficient, so damping decreases more at higher compression frequencies. Chemical index levels 2 and 3 (aka 100 and 121) interacted with log(cycle) also have negative coefficients, indicating that these foams lose damping faster than foam with index 79. But like in the stiffnessFrac model, these two chemical indices have higher damping right after compressions start, and foams with high frequency do as well. 
+
+Like the stiffness model, not all chemical indices look significant in Table 7, but we can double-check our predictors in the Anova in Table 8 and see that all our predictors are significant. 
 
 ```{r}
 Anova(dampingModel)
@@ -424,7 +430,7 @@ Lastly, we must look at the random effects of our model in @fig-7. Like the stif
 #| warning: false
 #| fig-cap: "Intercept Rand Effects vs. Slope Rand Effects"
 #| fig-align: "center"
-#| fig-width: 7
+#| fig-width: 8
 #| fig-height: 4
 
 re <- ranef(dampingModel)$ID
@@ -432,18 +438,20 @@ re <- ranef(dampingModel)$ID
 plot(re)
 ```
 
+\newpage
+
 ## 4. Recommendations 
 
-**Question 1:** We see that frequency, amplitude, chemical index, and cycle all have significant impacts on both stiffness and damping. 
+**Question 1:** We see that frequency, chemical index, and cycle all have significant impacts on both stiffness and damping. Amplitude also has an impact on stiffness.
 
-**Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and frequency.
+**Question 2:** For stiffness, we see that high frequency, high amplitude, and chemical indices 100 and 121 will increase the stiffness right after compressions start, but as time goes on, these will cause the more decrease in stiffness. Foam using chemical index 121 will have the greatest decrease in stiffness, and foam using chemical index 79 will have its stiffness decrease the least. For damping, high frequency and chemical indices 100 and 121 similarly lead to higher damping right after compressions start, and lead to the fastest decay in damping. The type of foam with the greatest decay in damping is chemical index 121, and foam using chemical index 79 will have its damping decrease the least.
 
 
 ## 5. Additional Considerations
 
 One concern we have about our conclusions is that they were made based on relatively few observations. Our model for stiffness fraction, for example, depends on chemical index, frequency, and amplitude, and only 12 samples with chemical index 100 were tested. There are too many possible combinations of frequency and amplitude to be explored thoroughly with just 12 samples. In cases like this, our models' coefficient estimates are based on very little information. The p-values gave us confidence that the coefficients were not zero, but our estimates could still be far off from their true values. We would need more observations to get a more reliable estimate of the true coefficients.
 
-A similar concern comes from foam types and testing conditions that were used less often, such as high amplitude The reliability of our models is already limited, and for these cases they are even less reliable. Additionally, if one variety of foam was never tested at high amplitude, then the model's claims about that foam at high frequency are based on nothing, and should not be trusted at all. So not all information this model gives on what effects stiffness and damping in foam is equally trustworthy. 
+A similar concern comes from testing conditions that were used less often, such as high frequency. The reliability of our models is already limited, and for these cases they are even less reliable. Additionally, if one variety of foam was never tested at high amplitude, then the model's claims about that foam at high frequency are based on nothing, and should not be trusted at all. So not all information this model gives on what effects stiffness and damping in foam is equally trustworthy. 
 
 Our models could have also been thrown off by conditions we didn't consider, such as room temperature and how many other people were using the laboratory. Since these conditions were not controlled for, they could have had an effect we were unable to detect.
 
@@ -769,7 +777,7 @@ foam_Samples <- unique(foam_Samples)
 
 count(foam_Samples, chemIndex, porosity)
 
-ggplot(foam_Samples, aes(x=amp)) +
+ggplot(foam_Samples, aes(x=freq)) +
   geom_histogram(bins=10)
 
 # graph2
@@ -893,18 +901,20 @@ combined
 library(car)
 suppressWarnings(FactorModel1 <- lmer(log(stiffnessFrac) ~ factor(chemIndex) + freq + amp +  log(cycle) +  factor(chemIndex):log(cycle) +  freq:log(cycle) + amp:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled))
 summary(FactorModel1)$coef
+
 Anova(FactorModel)
 
 # random effects of stiffnessFrac model
 re <- ranef(FactorModel)$ID
-
 plot(re)
+
+suppressWarnings(dampingModel <- lmer(log(stiffnessFrac) ~ factor(chemIndex) + freq + log(cycle) +  factor(chemIndex):log(cycle) + freq:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled))
+summary(dampingModel)$coef
 
 Anova(dampingModel)
 
 # random effects of dampingFrac model
 re <- ranef(dampingModel)$ID
-
 plot(re)
 ```
 
