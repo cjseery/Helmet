@@ -102,7 +102,7 @@ dampingFrac & tan(damping) / tan(first damping measurement) \\
 
 The formulas for stiffnessFrac and dampingFrac were specified by Foster. She believed these would be more useful alternatives to studying raw stiffness and damping.
 
-#  2. Exploratory Data Analysis (EDA)
+##  2. Exploratory Data Analysis (EDA)
 
 We reformatted the data from wide to long to ensure each observation represented one measurement, not one foam sample. Measurements taken beyond 10,000 cycles were removed to maintain consistency across observations, and because Moira identified this as the most relevant time frame.
 
@@ -318,7 +318,7 @@ The plots in @fig-5 separate the log(dampingFrac) vs log(cycle) graph from above
 Porosity also appears to have some effect. Trends in log(dampingFrac) for chemical index 121 are more similar to each other for low porosity than for high porosity, and trends in log(dampingFrac) for chemical index 79 are bit more similar to each other for high porosity than for low porosity. This suggests a porosity:chemIndex interaction term would improve our damping model, but this is still less clear than it was for stiffness.
 
 
-# 3. Statistical Analysis 
+## 3. Statistical Analysis 
 
 Based on the initial research questions, we will be developing two separate models: one for stiffness fraction and the other for damping fraction. Due to the experimental design and the fact that our observations are not independent of each other, we used a mixed model format for our predictions.
 
@@ -336,7 +336,7 @@ To select our variables, we started with a mixed model where all variables aside
             
 For the purpose of this paper, these are the variables we will be using in our model. We did find that there is a significant relationship between stiffness fraction and an interaction between amplitude and frequency. Unfortunately, the addition of this term lowered the significance of the relationship between the response and chemical index. Since chemical index is one of the focuses of this experiment, we decided to continue with our original model instead of including this term. 
    
-# 3.1 Stiffness
+## 3.1 Stiffness
 
 To best predict the value of log(stiffness fraction), we used the following model:
 
@@ -390,7 +390,7 @@ re <- ranef(FactorModel)$ID
 plot(re)
 ```
 
-#	3.2 Damping
+##	3.2 Damping
 
 To best predict the value of log(damping fraction), we used this model:
 
@@ -424,14 +424,14 @@ re <- ranef(dampingModel)$ID
 plot(re)
 ```
 
-# 4. Recommendations 
+## 4. Recommendations 
 
 **Question 1:** We see that frequency, amplitude, chemical index, and cycle all have significant impacts on both stiffness and damping. Porosity also has a significant impact on damping, but not on stiffness.
 
 
 **Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 and a low porosity will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and porosity.
 
-# 5. Additional Considerations
+## 5. Additional Considerations
 
 One concern we have about our conclusions is that they were made based on relatively few observations. Our model for stiffness fraction, for example, depends on chemical index, frequency, and amplitude, and only 12 samples with chemical index 100 were tested. There are too many possible combinations of frequency and amplitude to be explored thoroughly with just 12 samples. In cases like this, our models' coefficient estimates are based on very little information. The p-values gave us confidence that the coefficients were not zero, but our estimates could still be far off from their true values. We would need more observations to get a more reliable estimate of the true coefficients.
 
@@ -443,7 +443,7 @@ Another consideration is that our models predict the log of stiffness fraction a
 
 For further studies, we recommend that more foam samples are tested, so that there are more observations to work with. The same number of each type of foam should be used, and the treatments such as amplitude and initial stress should be assigned evenly and randomly, so each treatment level is fully tested on each type of foam. This will allow for more trustworthy models.
 
-# Technical Appendix
+## Technical Appendix
 
 ### Data Wrangling
 
