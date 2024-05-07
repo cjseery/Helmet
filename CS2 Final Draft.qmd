@@ -51,6 +51,7 @@ Foster’s objective is to understand what affects the changes in stiffness and 
 
 **Question 2:** How are these parameters impacting the fatigue response in stiffness and damping over time?
 
+\newpage
 
 ## 1.2 Variables
 
@@ -181,27 +182,17 @@ In order to see how stiffnessFrac and dampingFrac change over time for all foams
 #| fig-cap: "Log(stiffnessFrac) vs Log(cycle) and Log(dampingFrac) vs Log(cycle), Colored by Freq"
 #| fig-align: "center"
 #| fig-width: 10
-#| fig-height: 5
+#| fig-height: 4
 
 sp1 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = freq))
-#sp2 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
-#sp3 <- ggplot(foam_data_scaled, aes(y = log(stiffnessFrac), x = log(cycle))) + geom_point(aes(color = porosity))
-
-#combined <- sp1 + sp2 + sp3
-
-#combined
 
 dp1 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = freq))
-#dp2 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = factor(chemIndex)))
-#dp3 <- ggplot(foam_data_scaled, aes(y = log(dampingFrac), x = log(cycle))) + geom_point(aes(color = porosity))
-
-#combined <- dp1 + dp2 + dp3
-
-#combined
 
 combined <- sp1 + dp1
 combined
 ```
+
+\newpage
 
 In @fig-3, we logged the responses, and plotted them against the log of cycle. The relationships between log(cycle) and the logged responses look more linear than the relationships in @fig-2, so a linear model using these logged variables would fit better.
 
@@ -333,7 +324,11 @@ After starting with full models, we manually removed variables to increase the s
        chemIndex:log(cycle)        |         chemIndex:log(cycle)
         freq:log(cycle)            |           freq:log(cycle)
         amp:log(cycle)             |         porosity:log(cycle)
-            
+
+\begin{center}
+\text{Table 4: Selected Predictors}
+\end{center}
+
 We also found a significant relationship between stiffness fraction and the interaction between amplitude and frequency, but the addition of this term lowered the significance of the relationship between the response and chemical index. Since understanding the impact of chemical index is important to Foster, we decided to continue with our original model instead of including this term. 
    
 ## 3.1 Stiffness
@@ -348,33 +343,27 @@ $\beta_i = \beta_0 + \beta_1*\text{chemIndex} +\beta_2*\text{freq} + \beta_3*\te
 
 All samples have a stiffness fraction of 1 at cycle zero. A mixed model can create individual intercepts for each sample, so for this model, we used samples starting at the first cycle measurement after cycle zero. Thus, $\alpha$ terms in the model  explain the impact of the covariates right after compressions begin, and the $\beta$ terms explain the impact of the covariates as time goes on.
 
-From @Table-1, we see a high significance in our coefficients. Some variables are not significant on their own, their interactions with log(cycle) are. For example, chemical index does not appear to have a significant relationship with the response on it's own, but one level of chemical index has a significant relationship when interacted with log(cycle). The interaction terms explain how log(cycle) effects stiffness fraction differently under different conditions. From this summary, amplitude appears to have the largest positive impact on initial stiffness fraction, and the largest negative impact as time progresses.
-
 ```{r, echo = FALSE}
-#| echo: false
-#| label: Table-1
-#| warning: false
-#| fig-cap: "Coefficients for Stiffness Fraction Model"
-#| fig-align: "center"
-#| fig-width: 7
-#| fig-height: 4
 library(car)
 suppressWarnings(FactorModel1 <- lmer(log(stiffnessFrac) ~ factor(chemIndex) + freq + amp +  log(cycle) +  factor(chemIndex):log(cycle) +  freq:log(cycle) + amp:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled))
 summary(FactorModel1)$coef
 ```
 
-Although @Table-1 indicates there is significance to the different levels of chemical index, the output below in @Table-2 confirms that there is a significant difference between at least one of the levels of chemical index. To further assess the significance of the model, we used diagnostic plots to find that this model meets the linearity, normality, and equal variance conditions. These plots are in the appendix.
+\begin{center}
+\text{Table 5: Coefficients for Stiffness Fraction Model}
+\end{center}
+
+In Table 5, we see high significance (aka p-value < 0.05) for most of our coefficients. Some variables are not significant on their own, their interactions with log(cycle) are. For example, chemical index does not appear to have a significant relationship with the response on it's own, but one level of chemical index has a significant relationship when interacted with log(cycle). The interaction terms explain how log(cycle) effects stiffness fraction differently under different conditions. From this summary, amplitude appears to have the largest positive impact on initial stiffness fraction, and the largest negative impact as time progresses.
+
+Although Table 5 indicates chemical index levels 2 and 3 (aka 100 and 121) are not significant, the output below in Table 6 confirms that at least one chemical index is significantly different from another. To further assess the model, we used diagnostic plots to find that it meets the linearity, normality, and equal variance conditions. These plots are in the appendix.
 
 ```{r, echo = FALSE}
-#| echo: false
-#| label: Table-2
-#| warning: false
-#| fig-cap: "Anova Analysis of Stiffness Fraction Model"
-#| fig-align: "center"
-#| fig-width: 7
-#| fig-height: 4
 Anova(FactorModel1)
 ```
+
+\begin{center}
+\text{Table 6: Anova Analysis of Stiffness Fraction Model}
+\end{center}
 
 Lastly, it was necessary to explore the random effects associated with the mixed model. From @fig-6, we notice that as the intercept increases, the slope decreases. This is a very defined trend, supporting our conclusion that a mixed model should be used. We would expect the foams to start at a similar stiffness fraction, and deviate based on the other predictors as time passes. This plot confirms this behavior.
 
