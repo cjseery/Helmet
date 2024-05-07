@@ -320,10 +320,10 @@ After starting with full models, we manually removed variables to increase the s
            chemIndex               |             chemIndex
              freq                  |               freq
           log(cycle)               |            log(cycle)
-              amp                  |             porosity
-       chemIndex:log(cycle)        |         chemIndex:log(cycle)
-        freq:log(cycle)            |           freq:log(cycle)
-        amp:log(cycle)             |         porosity:log(cycle)
+              amp                  |         chemIndex:log(cycle)
+       chemIndex:log(cycle)        |          freq:log(cycle)
+        freq:log(cycle)            |           
+        amp:log(cycle)             |         
 
 \begin{center}
 \text{Table 4: Selected Predictors}
@@ -391,9 +391,9 @@ To predict log(damping fraction), we used this model:
 
 **Level 1**: $\log(\text{dampingFrac}) = \alpha_i + \beta_i*log(cycle)$
 
-**Level 2**: $\alpha_i = \alpha_0 + \alpha_1*\text{porosity} + \alpha_2*\text{chemIndex} + \alpha_3*\text{freq}$
+**Level 2**: $\alpha_i = \alpha_0 + \alpha_1*\text{chemIndex} + \alpha_2*\text{freq}$
 
-$\beta_i = \beta_0 + \beta_1*\text{porosity} + \beta_2*\text{chemIndex} +\beta_3*\text{freq}$
+$\beta_i = \beta_0  + \beta_2*\text{chemIndex} +\beta_3*\text{freq}$
 
 ```{r, echo = FALSE}
 suppressWarnings(dampingModel <- lmer(log(stiffnessFrac) ~ factor(chemIndex) + freq + log(cycle) +  factor(chemIndex):log(cycle) + freq:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled))
@@ -434,10 +434,10 @@ plot(re)
 
 ## 4. Recommendations 
 
-**Question 1:** We see that frequency, amplitude, chemical index, and cycle all have significant impacts on both stiffness and damping. Porosity also has a significant impact on damping, but not on stiffness.
+**Question 1:** We see that frequency, amplitude, chemical index, and cycle all have significant impacts on both stiffness and damping. 
 
+**Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and frequency.
 
-**Question 2:** High frequency, high amplitude, and chemical indices 100 and 121 all increase the initial stiffness, but as time goes on, these also lose stiffness the fastest. Foam with chemical index 121 has the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 and a low porosity will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and porosity.
 
 ## 5. Additional Considerations
 
