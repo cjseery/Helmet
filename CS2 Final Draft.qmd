@@ -322,7 +322,7 @@ Porosity also appears to have some effect. Trends in log(dampingFrac) for chemic
 
 Based on the initial research questions, we will be developing two separate models: one for stiffness fraction and the other for damping fraction. Due to the experimental design and the fact that our observations are not independent of each other, we used a mixed model format for our predictions.
 
-In order to select our variables, we first started with a mixed model where all variables aside from log(cycle) were treated as level two variables and log(cycle) was treated as a level one variable. In this context, the level two variables on their own will impact the intercept of our model and the interaction between log(cycle) and the other variables will impact the slope of our model. After starting with this full model, we manually removed variables from the model to increase the significance of the coefficients and to minimize the REML. From this process, we were able to create a model using the following predictors:
+To select our variables, we started with a mixed model where all variables aside from log(cycle) were treated as level two variables and log(cycle) was treated as a level one variable. The level two variables on their own will impact the intercept of our model and the interaction between log(cycle) and the other variables will impact the slope of our model. After starting with this full model, we manually removed variables from the model to increase the significance of the coefficients and to minimize the REML. Once a base model was created, we then used ANOVA testing to determine if the different levels of each predictor were significant and to compare against the full model. Based on this testing, we were able to create a model using the following predictors:
 
 |    Stiffness Model Predictors    |        Damping Model Predictors                     
 |:---------------------------------|:------------------------------------|
@@ -333,30 +333,46 @@ In order to select our variables, we first started with a mixed model where all 
        chemIndex:log(cycle)        |         chemIndex:log(cycle)
         freq:log(cycle)            |           freq:log(cycle)
         amp:log(cycle)             |         porosity:log(cycle)
-        
-\begin{center}
-\text{Table 4: Predictors Selected For Each Model}
-\end{center}
             
+For the purpose of this paper, these are the variables we will be using in our model. We did find that there is a significant relationship between stiffness fraction and an interaction between amplitude and frequency. Unfortunately, the addition of this term lowered the significance of the relationship between the response and chemical index. Since chemical index is one of the focuses of this experiment, we decided to continue with our original model instead of including this term. 
    
 # 3.1 Stiffness
 
 To best predict the value of log(stiffness fraction), we used the following model:
 
-**Level 1**: $\log(\text{stiffnessFrac}) = \alpha_i + \beta_i*log(cycle)$
+Level 1: $\log(\text{stiffnessFrac}) = \alpha_i + \beta_i*log(cycle)$
+Level 2: $\alpha_i = \alpha_0 + \alpha_1*\text{chemIndex} + \alpha_2*\text{freq} + \alpha_3*\text{amp}$
+         $\beta_i = \beta_0 + \beta_1*\text{chemIndex} +\beta_2*\text{freq} + \beta_3*\text{amp}$
 
-**Level 2**: $\alpha_i = \alpha_0 + \alpha_1*\text{chemIndex} + \alpha_2*\text{freq} + \alpha_3*\text{amp}$
+All samples have a stiffness fraction of 1 at cycle zero. The structure of a mixed model creates individual intercepts for each sample so for this model, we will be using samples starting at the first cycle measurement after cycle zero and going to cycle 10000. The alpha terms in the model will explain the impact of the covariates at the initial time recorded and the beta terms will explain the impact of the covariates on the stiffness fraction as time goes on.
 
-$\beta_i = \beta_0 + \beta_1*\text{chemIndex} +\beta_2*\text{freq} + \beta_3*\text{amp}$
-
-
-From the statistical summary below we see a high significance in our coefficients. The p-value for every term has a significance below five percent, meaning that there is a significant relationship between each of the terms and the response variable. The REML is also extremely low which leads us to conclude that this model fits the data very well and has minimal error. The coefficients not relating to cycle are impacting the initial stiffness of the foam at time zero. The variable that has the most positive impact on the initial stiffness is having a chemical index of 2. 
+From @Table-1 we see a high significance in our coefficients. Although not every variable is significant on it's own, the interaction with time is. For example, chemical index does not appear to have a significant relationship with the response on it's own, but one level of chemical index has a significant relationship when interacted with cycle. The interaction terms in this model are an indicator of how the response will change based on both a covariate and time. From this summary, amplitude appears to have the largest positive impact on initial stiffness fraction and the largest negative impact as time progresses.
 
 ```{r, echo = FALSE}
-Anova(FactorModel)
+#| echo: false
+#| label: Table-1
+#| warning: false
+#| fig-cap: "Coefficients for Stiffness Fraction Model"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
+library(car)
+suppressWarnings(FactorModel1 <- lmer(log(stiffnessFrac) ~ factor(chemIndex) + freq + amp +  log(cycle) +  factor(chemIndex):log(cycle) +  freq:log(cycle) + amp:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled))
+summary(FactorModel1)$coef
 ```
 
-We also assessed the model to see how it met the conditions of a predictive model. From @fig-example3 (see Appendix), we see that there appears to be some sinusoidal behavior at the beginning and the middle of the shape has a larger range than the rest of the plot. Since the range of the plot is so small, we can conclude that the equal variance condition is being met. We also do not see any flaring or nonlinear movement so the linearity condition is also being met. The QQ plot in @fig-example4 (see Appendix) shows some tailing on the ends but nothing too concerning. This concludes that all conditions are being met so this model is valid for the purpose of prediction.
+Although @Table-1 indicates there is significance to the different levels of chemical index, the output below in @Table-2 confirms that there is a significant difference between at least on of the levels of chemical index. To further assess the significane of the model, we explored the residual plots and found that this model meets the linearity, normality, and equal variance conditions. These plots can be further explored in the appendix.
+
+```{r, echo = FALSE}
+#| echo: false
+#| label: Table-2
+#| warning: false
+#| fig-cap: "Anova Analysis of Stiffness Fraction Model"
+#| fig-align: "center"
+#| fig-width: 7
+#| fig-height: 4
+Anova(FactorModel1)
+```
 
 Lastly, given that we are using a mixed effects model, it is necessary to explore the random effects associated with the model. From @fig-6, we notice that as the intercept increases, the slope decreases. This is a very defined trend and supports our conclusion that a mixed model should be used. We would expect to see that each of the foams starts at a similar stiffness fraction and as time increases, there would be deviations based on the other predictors. This plot confirms this behavior.
 
@@ -410,10 +426,10 @@ plot(re)
 
 # 4. Recommendations 
 
-**Question 1:** We see that chemical index, frequency, and cycle number have the most significant effects on both damping and stiffness. However porosity has an effect on damping and amplitude as an effect on stiffness. 
+**Question 1:** We see that frequency, amplitude, chemical index, and cycle all have significant impacts on both stiffness and damping. Porosity also has a significant impact on damping, but not on stiffness.
 
 
-**Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and porosity.
+**Question 2:** For stiffness, we see that the individual predictors on their own will increase the initial stiffness, but as time goes on, foam using chemical index 121 will have the greatest decrease in stiffness. The individual predictors will impact damping in a similar way but foam with a chemical index of 79 and a low porosity will see the greatest decay in damping. Overall, there appear to be significant impacts on the stiffness and damping values depending on chemical index and porosity.
 
 # 5. Additional Considerations
 
@@ -865,6 +881,10 @@ dfc6 <- ggplot(foam_data_scaled[foam_data_scaled$chemIndex == 3 & foam_data_scal
 combined <- dfc1 + dfc2 + dfc3 + dfc4 + dfc5 + dfc6 + plot_layout(ncol = 3)
 combined
 
+#StiffnessFrac Model
+library(car)
+suppressWarnings(FactorModel1 <- lmer(log(stiffnessFrac) ~ factor(chemIndex) + freq + amp +  log(cycle) +  factor(chemIndex):log(cycle) +  freq:log(cycle) + amp:log(cycle) + (1 + log(cycle)|ID), data = foam_data_scaled))
+summary(FactorModel1)$coef
 Anova(FactorModel)
 
 # random effects of stiffnessFrac model
